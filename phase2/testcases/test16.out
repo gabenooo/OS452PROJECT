@@ -1,0 +1,5 @@
+phase3_start_service_processes() called -- currently a NOP
+phase4_start_service_processes() called -- currently a NOP
+start2(): started, trying to exceed systemwide mailslots...
+No slots available: mailbox 45 and slot 25
+TESTCASE ENDED

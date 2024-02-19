@@ -1,0 +1,133 @@
+#include <phase2.h>
+
+systemCallVec;
+
+//static mailboxes[MAXMBOX];
+
+//static mailSlots[MAXSLOTS];
+
+//slots with size MAX_MESSAGE
+
+//shadow proccess table
+
+
+void phase2_start_service_processes(void){
+    // Called by Phase 1 from init, once processes are running but before the testcase
+    // begins. If your implementation requires any service processes to be running for
+    // Phase 2 (I don’t expect that it will), then this is the place to call spork() to
+    // create them.
+}
+
+
+void phase2_clockHandler(void){
+    // Called by Phase 1 from the clock interrupt. Use it to implement any logic
+    // that you want to run every time that the clock interrupt occurs.
+}
+
+
+void phase2_init(void){
+    // Very similar to phase1_init(), this function is called by the testcase during
+    // bootstrap, before any processes are running. Use it to initialize any data structures that you plan to use. 
+    // You must not attempt to spork() any processes, or
+    // use any other process-specific functions, since the processes are not yet running
+}
+
+
+// returns id of mailbox, or -1 if no more mailboxes, or -1 if invalid args
+int MboxCreate(int slots, int slot_size){
+    // Creates a new mailbox. You may choose any way to assign IDs for your created
+    // mailboxes (I simply return the index into the array of mailboxes).
+    // If you destroy a mailbox, and then later create a new one, it is permissible
+    // to re-use an old mailbox ID.
+}
+
+
+// returns 0 if successful, -1 if invalid arg
+int MboxRelease(int mbox_id){
+    // Destroys a mailbox. All slots consumed by the mailbox will be freed. All blocked
+    // producers and consumers will be unblocked, and return -1.
+    // Once the mailbox has been marked as destroyed, no more processes will be
+    // allowed to block on it; any attempt to Send() or Recv() on it will return -1.
+    // You must destroy the mailbox (and wake its blocked processes) promptly
+    // but not necessarily instantly. By “promptly,” I mean that the various blocked
+    // processes should be awoken, removed from any pending queues, etc. as soon
+    // as is practical. However, we do not guarantee that all of these processes will
+    // be awake when this function returns - and as such, it might not be possible to
+    // re-create the mailbox immediately after this function returns.
+    // Why might this happen? It depends on the mailbox implementation. In
+    // your implementation, this might not be a problem - but in my implementation,
+    // only one producer, and one consumer, can be waking up at a time - meaning
+    // that it takes a while to “flush” any blocked producers and consumers from the
+    // various queues.
+}
+
+
+// returns 0 if successful, -1 if invalid args
+int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
+    // Sends a message through a mailbox. If the message is delivered directly to a
+    // consumer or queued up in a mail slot, then this function will not block (although
+    // it might context switch, even then, if it wakes up a higher-priority process).
+    // If there are no consumers queued and no space available to queue a message,
+    // then this process will block until the message can be delivered - either to a
+    // consumer, or into a mail slot.
+}
+
+
+// returns size of received msg if successful, -1 if invalid args
+int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
+    // Waits to receive a message through a mailbox. If there is a message already
+    // queued in a mail slot, it may read it directly and return (but be careful to obey
+    // the ordering rules we discussed earlier in the spec). Otherwise it will block until
+    // a message is available. (But note the special rules for zero-slot mailboxes, see
+    // above.)
+}
+
+
+// returns 0 if successful, 1 if mailbox full, -1 if illegal args
+int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
+    // These functions work exactly like their non-Cond versions, except that they
+    // refuse to block. If, at any point, they would normally have to block, they will
+    // return -2 instead.
+    // While these functions will never block, they might context switch, if they
+    // wake up a process that was higher priority than the one on which the interrupt
+    // handler is running. This is not a problem.
+    // Note that you may find it useful, instead of implementing two different copies
+    // of Send() and Recv(), to instead create (private) helper functions, which both
+    // the Cond and non-Cond versions of your functions can call. But remember: you
+    // must not change the declaration of any function called by the testcases!
+}
+
+
+// returns 0 if successful, 1 if no msg available, -1 if illegal args
+int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
+    // These functions work exactly like their non-Cond versions, except that they
+    // refuse to block. If, at any point, they would normally have to block, they will
+    // return -2 instead.
+    // While these functions will never block, they might context switch, if they
+    // wake up a process that was higher priority than the one on which the interrupt
+    // handler is running. This is not a problem.
+    // Note that you may find it useful, instead of implementing two different copies
+    // of Send() and Recv(), to instead create (private) helper functions, which both
+    // the Cond and non-Cond versions of your functions can call. But remember: you
+    // must not change the declaration of any function called by the testcases!
+}
+
+
+// type = interrupt device type, unit = # of device (when more than one),
+// status = where interrupt handler puts device's status register.
+void waitDevice(int type, int unit, int *status){
+    // Waits for an interrupt to fire, on a given device. Only three device types are
+    // valid: the clock, disk, and terminal devices. The unit field must be a valid value
+    // (0 for clock; 0,1 for disk; 0,1,2,3 for terminal); if it is not, report an error and
+    // halt the simulation.
+    // This function will Recv() from the proper mailbox for this device; when the
+    // message arrives, it will store the status (remember, the status was sent, as the
+    // message payload, from the interrupt handler) into the out parameter and then
+    // return.
+}
+void wakeupByDevice(int type, int unit, int status){
+    //????????
+}
+
+// 
+extern void (*systemCallVec[])(USLOSS_Sysargs *args);
