@@ -1,4 +1,5 @@
 #include <phase2.h>
+#include <stdlib.h>
 
 //systemCallVec;
 
@@ -17,16 +18,16 @@ struct mailbox {
     struct slot* cur;
     
     struct mailSlot* nextMailBox;
-    struct mailSlot*
-}
+    //struct mailSlot*;
+};
 
 struct slot{
     int inUse;
     int slotSize;
     char mailSlot[MAX_MESSAGE];
-}
+};
 
-
+int curMailboxID;
 
 
 void phase2_start_service_processes(void){
@@ -67,6 +68,8 @@ void phase2_init(void){
             mailSlots[i].mailSlot[j] = 0;
         }
     }
+
+    curMailboxID = 0;
 }
 
 
@@ -174,3 +177,17 @@ void wakeupByDevice(int type, int unit, int status){
 
 // 
 extern void (*systemCallVec[])(USLOSS_Sysargs *args);
+
+/******************** ALL THE HELPER FUNCTIONS ********************/
+
+/* Gets an empty mailbox ID, returns -1 if full */
+int getNewID() {
+    for (int i = curMailboxID + 1; i < MAXMBOX; i++) {
+        if (mailboxes[i].id == -1) {
+            curMailboxID = i;
+            return i;
+        }
+    }
+
+    return -1;
+}
