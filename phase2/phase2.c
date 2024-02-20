@@ -1,5 +1,7 @@
 #include <phase2.h>
+
 #include <stdlib.h>
+
 
 //systemCallVec;
 
@@ -11,11 +13,14 @@ struct mailbox {
     int id;
     int start;
     int end;
+    int numSlots;
     struct slot* cur;
     
     struct mailSlot* nextMailBox;
+
     //struct mailSlot*;
 };
+
 
 struct slot{
     int inUse;
@@ -76,11 +81,29 @@ void phase2_init(void){
 
 // returns id of mailbox, or -1 if no more mailboxes, or -1 if invalid args
 int MboxCreate(int slots, int slot_size){
-    // Creates a new mailbox. You may choose any way to assign IDs for your created
-    // mailboxes (I simply return the index into the array of mailboxes).
-    // If you destroy a mailbox, and then later create a new one, it is permissible
-    // to re-use an old mailbox ID.
-    return 0;
+    // slots is number of slots, slot_size is the message length for each slot?
+
+    // first error check
+    if ( (slots < 0|| slot_size < 0) || (slot_size > MAX_MESSAGE)) return -1;
+    int newId = getNewId();
+    // check if mailbox is full: 
+    if (newId == -1) return -1;
+    
+    mailboxes[newId].id = newId;
+    mailboxes[newId].start = getStartSlot(slots);
+    mailboxes[newId].end = mailboxes[newId].start + slots;
+    mailboxes[newId].cur = &mailSlots[mailboxes[newId].start];
+    mailboxes[newId].nextMailBox = NULL;
+    mailboxes[newId].numSlots = slots;
+    
+    //set cur mailbox slots to in use
+    for (int i = mailboxes[newId].start; i < mailboxes[newId].end; i++){
+        mailSlots[i].inUse = 1;
+        mailSlots[i].slotSize = slot_size;
+        mailSlots[i].mailSlot = NULL;
+    }
+
+    return newId;
 }
 
 
@@ -101,6 +124,23 @@ int MboxRelease(int mbox_id){
     // only one producer, and one consumer, can be waking up at a time - meaning
     // that it takes a while to “flush” any blocked producers and consumers from the
     // various queues.
+// struct mailbox {
+//     int id;
+//     int start;
+//     int end;
+//     struct slot* cur;
+    
+//     struct mailSlot* nextMailBox;
+
+// }
+    // free each mail slot (might have to change this later)
+    for (int i = mailboxes[mbox_id].start; i < mailboxes[mbox_id].end; i++){
+        mailSlots[i].inUse = 0;
+        mailSlots[i].slotSize = 0;
+        mailSlots[i].mailSlot = NULL;
+    }
+
+
     return 0;
 }
 
