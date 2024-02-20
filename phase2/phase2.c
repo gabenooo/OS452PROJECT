@@ -3,10 +3,6 @@
 
 //systemCallVec;
 
-static struct mailbox mailboxes[MAXMBOX];
-
-static struct slot mailSlots[MAXSLOTS];
-
 //slots with size MAX_MESSAGE
 
 //shadow proccess table
@@ -27,8 +23,12 @@ struct slot{
     char mailSlot[MAX_MESSAGE];
 };
 
-int curMailboxID;
+static struct mailbox mailboxes[MAXMBOX];
 
+static struct slot mailSlots[MAXSLOTS];
+
+int curMailboxID;
+int curSlotID;
 
 void phase2_start_service_processes(void){
     // Called by Phase 1 from init, once processes are running but before the testcase
@@ -70,6 +70,7 @@ void phase2_init(void){
     }
 
     curMailboxID = 0;
+    curSlotID = 0;
 }
 
 
@@ -189,5 +190,38 @@ int getNewID() {
         }
     }
 
+    return -1;
+}
+
+/* Returns the index of the start slot for the series of slots requested */
+int getStartSlot(int numOfSlots) {
+    int startSlot = curSlotID + 1;
+    int slotCounter = 0;
+
+    /* Loop over each slot, starting at the current slot index */
+    for ( int i = startSlot; i < MAXSLOTS + startSlot; i++) {
+        /* If we've encountered a slot in-use, reset the counter and continue on */
+        if ( mailSlots[i % MAXSLOTS].inUse == 1 ) {
+            startSlot = -1;
+            slotCounter = 0;
+            continue;
+        }
+
+        /* If we have previously reset, set the start and count this slot, otherwise count the slot */
+        if ( startSlot == -1 ) {
+            startSlot = i % MAXSLOTS;
+            slotCounter++;
+        }
+        else {
+            slotCounter++;
+        }
+
+        /* If all these slots are free, return the starting slot number */
+        if ( slotCounter == numOfSlots) {
+            curSlotID = startSlot + numOfSlots;
+            return startSlot;
+        }
+    }
+    /* If no combination of slots available return -1 */
     return -1;
 }
