@@ -1,14 +1,32 @@
 #include <phase2.h>
 
-systemCallVec;
+//systemCallVec;
 
-//static mailboxes[MAXMBOX];
+static struct mailbox mailboxes[MAXMBOX];
 
-//static mailSlots[MAXSLOTS];
+static struct slot mailSlots[MAXSLOTS];
 
 //slots with size MAX_MESSAGE
 
 //shadow proccess table
+
+struct mailbox {
+    int id;
+    int start;
+    int end;
+    struct slot* cur;
+    
+    struct mailSlot* nextMailBox;
+    struct mailSlot*
+}
+
+struct slot{
+    int inUse;
+    int slotSize;
+    char mailSlot[MAX_MESSAGE];
+}
+
+
 
 
 void phase2_start_service_processes(void){
@@ -16,6 +34,7 @@ void phase2_start_service_processes(void){
     // begins. If your implementation requires any service processes to be running for
     // Phase 2 (I don’t expect that it will), then this is the place to call spork() to
     // create them.
+
 }
 
 
@@ -30,6 +49,24 @@ void phase2_init(void){
     // bootstrap, before any processes are running. Use it to initialize any data structures that you plan to use. 
     // You must not attempt to spork() any processes, or
     // use any other process-specific functions, since the processes are not yet running
+
+    /* Mailbox initialization */
+    for (int i = 0; i < MAXMBOX; i++) {
+        mailboxes[i].id = -1;
+        mailboxes[i].start = 0;
+        mailboxes[i].end = 0;
+        mailboxes[i].cur = NULL;
+        mailboxes[i].nextMailBox = NULL;
+    }
+
+    /* MailSlot initialization */
+    for ( int i = 0; i < MAXSLOTS; i++) {
+        mailSlots[i].inUse = 0;
+        mailSlots[i].slotSize = 0;
+        for ( int j = 0; j < MAX_MESSAGE; j++) {
+            mailSlots[i].mailSlot[j] = 0;
+        }
+    }
 }
 
 
@@ -39,6 +76,7 @@ int MboxCreate(int slots, int slot_size){
     // mailboxes (I simply return the index into the array of mailboxes).
     // If you destroy a mailbox, and then later create a new one, it is permissible
     // to re-use an old mailbox ID.
+    return 0;
 }
 
 
@@ -59,6 +97,7 @@ int MboxRelease(int mbox_id){
     // only one producer, and one consumer, can be waking up at a time - meaning
     // that it takes a while to “flush” any blocked producers and consumers from the
     // various queues.
+    return 0;
 }
 
 
@@ -70,6 +109,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     // If there are no consumers queued and no space available to queue a message,
     // then this process will block until the message can be delivered - either to a
     // consumer, or into a mail slot.
+    return 0;
 }
 
 
@@ -80,6 +120,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // the ordering rules we discussed earlier in the spec). Otherwise it will block until
     // a message is available. (But note the special rules for zero-slot mailboxes, see
     // above.)
+    return 0;
 }
 
 
@@ -95,6 +136,7 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     // of Send() and Recv(), to instead create (private) helper functions, which both
     // the Cond and non-Cond versions of your functions can call. But remember: you
     // must not change the declaration of any function called by the testcases!
+    return 0;
 }
 
 
@@ -110,6 +152,7 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // of Send() and Recv(), to instead create (private) helper functions, which both
     // the Cond and non-Cond versions of your functions can call. But remember: you
     // must not change the declaration of any function called by the testcases!
+    return 0;
 }
 
 
