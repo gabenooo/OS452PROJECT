@@ -1,6 +1,7 @@
 #include <phase2.h>
 #include <phase1.h>
 #include <stdlib.h>
+#include <string.h>
 #include <phase1.h>
 
 
@@ -226,7 +227,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         return -2;
     }
     curSlot->inUse = 1;
-    strcpy(&curSlot->mailSlot, msg_ptr);
+    strcpy(curSlot->mailSlot, msg_ptr);
     curSlot->slotSize = msg_size;
 
     /* Adds the message to the message queue */
