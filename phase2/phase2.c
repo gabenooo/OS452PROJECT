@@ -45,6 +45,7 @@ struct mailbox {
     struct slot * end;
     int numSlots;
     int numSlotsInUse;
+    struct slot*      slotsQueue;
     struct shadowPCB* producerQueue;
     struct shadowPCB* consumerQueue;
 };
@@ -104,6 +105,7 @@ void phase2_init(void) {
         mailboxes[i].numSlotsInUse = 0;
         mailboxes[i].producerQueue = NULL;
         mailboxes[i].consumerQueue = NULL;
+        mailboxes[i].slotsQueue = NULL;
 
     }
 
@@ -180,6 +182,8 @@ int MboxRelease(int mbox_id){
     mailboxes[mbox_id].numSlotsInUse = 0;
     mailboxes[mbox_id].producerQueue = NULL;
     mailboxes[mbox_id].consumerQueue = NULL;
+    mailboxes[mbox_id].slotsQueue = NULL;
+
 
     // free each mail slot
     struct slot * cur = mailboxes[mbox_id].start;
@@ -207,7 +211,19 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     // If there are no consumers queued and no space available to queue a message,
     // then this process will block until the message can be delivered - either to a
     // consumer, or into a mail slot.
+    if (msg_size > MAX_MESSAGE) {
+        USLOSS_Console("ERROR Message size too big %d\n");
+        
+    }
 
+
+    struct slot* curSlot = getStartSlot();
+
+
+
+    if ( mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL ) {
+
+    }
 
 
 
