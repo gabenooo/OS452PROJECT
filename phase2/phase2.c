@@ -1,5 +1,4 @@
 #include <phase2.h>
-
 #include <stdlib.h>
 
 
@@ -50,7 +49,7 @@ void phase2_clockHandler(void){
 }
 
 
-void phase2_init(void){
+void phase2_init(void) {
     // Very similar to phase1_init(), this function is called by the testcase during
     // bootstrap, before any processes are running. Use it to initialize any data structures that you plan to use. 
     // You must not attempt to spork() any processes, or
@@ -73,9 +72,9 @@ void phase2_init(void){
             mailSlots[i].mailSlot[j] = 0;
         }
     }
-
     curMailboxID = 0;
     curSlotID = 0;
+
 }
 
 
@@ -93,14 +92,10 @@ int MboxCreate(int slots, int slot_size){
     mailboxes[newId].start = getStartSlot(slots);
     mailboxes[newId].end = mailboxes[newId].start + slots;
     mailboxes[newId].cur = &mailSlots[mailboxes[newId].start];
-    mailboxes[newId].nextMailBox = NULL;
-    mailboxes[newId].numSlots = slots;
-    
-    //set cur mailbox slots to in use
     for (int i = mailboxes[newId].start; i < mailboxes[newId].end; i++){
         mailSlots[i].inUse = 1;
         mailSlots[i].slotSize = slot_size;
-        mailSlots[i].mailSlot = NULL;
+        //mailSlots[i].mailSlot = NULL;
     }
 
     return newId;
@@ -137,7 +132,7 @@ int MboxRelease(int mbox_id){
     for (int i = mailboxes[mbox_id].start; i < mailboxes[mbox_id].end; i++){
         mailSlots[i].inUse = 0;
         mailSlots[i].slotSize = 0;
-        mailSlots[i].mailSlot = NULL;
+        //mailSlots[i].mailSlot = NULL;
     }
 
 
@@ -222,7 +217,7 @@ extern void (*systemCallVec[])(USLOSS_Sysargs *args);
 /******************** ALL THE HELPER FUNCTIONS ********************/
 
 /* Gets an empty mailbox ID, returns -1 if full */
-int getNewID() {
+int getNewId() {
     for (int i = curMailboxID + 1; i < MAXMBOX; i++) {
         if (mailboxes[i].id == -1) {
             curMailboxID = i;
