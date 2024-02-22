@@ -41,6 +41,9 @@ extern int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size);
 extern void     waitDevice(int type, int unit, int *status);
 extern void wakeupByDevice(int type, int unit, int status);
 
+extern int getNewId();
+extern struct slot* getStartSlot();
+
 // 
 extern void (*systemCallVec[])(USLOSS_Sysargs *args);
 
