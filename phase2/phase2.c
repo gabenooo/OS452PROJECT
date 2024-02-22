@@ -8,6 +8,34 @@
 
 //shadow proccess table
 
+struct shadowPCB {
+    int pid; // if pid =0, proccess is dead
+    // USLOSS_Context context;
+    // char name[MAXNAME]; 
+    //State?
+    int priority; 
+    int status;
+    int zombie;
+    int number_of_children;
+    // char * stack;
+    // struct PCB* first_child;
+    // struct PCB* parent;
+    // struct PCB* next_sibling;
+    // struct PCB* run_queue_next;
+    int blocked;
+
+
+    //will need:
+    struct shadowPCB* pNext;
+    struct shadowPCB* cNext;
+    
+};
+
+struct shadowPCB shadowProcTable[MAXPROC];
+
+
+
+
 struct mailbox {
     int id;
     struct slot * start; //linked list to not have contigus slots
