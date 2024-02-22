@@ -11,21 +11,27 @@
 
 struct mailbox {
     int id;
-    int start;
-    int end;
+    struct slot * start; //linked list to not have contigus slots
+    // head pointer 
+    // pointer 
+    struct slot * end;
     int numSlots;
-    struct slot* cur;
-    
+
+    //not sure if we need this:
     struct mailSlot* nextMailBox;
 
     //struct mailSlot*;
 };
+
+//queue of producer and consumer, 
+// can get pid when they call mailbox send we call call getPID -> then use that to make a copy of the proccess table entry in our shadow table
 
 
 struct slot{
     int inUse;
     int slotSize;
     char mailSlot[MAX_MESSAGE];
+    struct slot * nextSlot;
 };
 
 static struct mailbox mailboxes[MAXMBOX];
