@@ -67,6 +67,9 @@ void phase2_init(void) {
         mailboxes[i].id = -1;
         mailboxes[i].start = NULL;
         mailboxes[i].end = NULL;
+        mailboxes[i].numSlots = 0;
+        mailboxes[i].numSlotsInUse = 0;
+
         //mailboxes[i].cur = NULL;
         mailboxes[i].nextMailBox = NULL;
     }
@@ -78,6 +81,7 @@ void phase2_init(void) {
         for ( int j = 0; j < MAX_MESSAGE; j++) {
             mailSlots[i].mailSlot[j] = 0;
         }
+        mailSlots[i].nextSlot = NULL;
     }
     curMailboxID = 0;
     curSlotID = 0;
