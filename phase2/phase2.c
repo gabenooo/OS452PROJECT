@@ -66,7 +66,7 @@ void phase2_init(void) {
         mailboxes[i].id = -1;
         mailboxes[i].start = 0;
         mailboxes[i].end = 0;
-        mailboxes[i].cur = NULL;
+        //mailboxes[i].cur = NULL;
         mailboxes[i].nextMailBox = NULL;
     }
 
@@ -97,7 +97,7 @@ int MboxCreate(int slots, int slot_size){
     mailboxes[newId].id = newId;
     mailboxes[newId].start = getStartSlot(slots);
     mailboxes[newId].end = mailboxes[newId].start + slots;
-    mailboxes[newId].cur = &mailSlots[mailboxes[newId].start];
+    //mailboxes[newId].cur = &mailSlots[mailboxes[newId].start];
     for (int i = mailboxes[newId].start; i < mailboxes[newId].end; i++){
         mailSlots[i].inUse = 1;
         mailSlots[i].slotSize = slot_size;
@@ -235,34 +235,15 @@ int getNewId() {
 }
 
 /* Returns the index of the start slot for the series of slots requested */
-int getStartSlot(int numOfSlots) {
-    int startSlot = curSlotID + 1;
-    int slotCounter = 0;
+struct Slot* getStartSlot(int numOfSlots) {
 
-    /* Loop over each slot, starting at the current slot index */
-    for ( int i = startSlot; i < MAXSLOTS + startSlot; i++) {
-        /* If we've encountered a slot in-use, reset the counter and continue on */
-        if ( mailSlots[i % MAXSLOTS].inUse == 1 ) {
-            startSlot = -1;
-            slotCounter = 0;
-            continue;
-        }
-
-        /* If we have previously reset, set the start and count this slot, otherwise count the slot */
-        if ( startSlot == -1 ) {
-            startSlot = i % MAXSLOTS;
-            slotCounter++;
-        }
-        else {
-            slotCounter++;
-        }
-
-        /* If all these slots are free, return the starting slot number */
-        if ( slotCounter == numOfSlots) {
-            curSlotID = startSlot + numOfSlots;
-            return startSlot;
+    for ( int i = curSlotID + 1; i < MAXSLOTS + curSlotID + 1; i++ ) {
+        if ( mailSlots[i % MAXSLOTS].inUse == 0 ) {
+            curSlotID = i % MAXSLOTS;
+            return &mailSlots[i % MAXSLOTS];
         }
     }
-    /* If no combination of slots available return -1 */
-    return -1;
+
+    /* If no slots available return -1 */
+    return NULL;
 }
