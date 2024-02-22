@@ -211,22 +211,43 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     // If there are no consumers queued and no space available to queue a message,
     // then this process will block until the message can be delivered - either to a
     // consumer, or into a mail slot.
+    
     if (msg_size > MAX_MESSAGE) {
-        USLOSS_Console("ERROR Message size too big %d\n");
-        
+        USLOSS_Console("ERROR Message size too big %d. Max is %d\n", msg_size, MAX_MESSAGE);
+        return -1;
     }
-
 
     struct slot* curSlot = getStartSlot();
 
-
-
-    if ( mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL ) {
-
+    /* If we are out of space */
+    if (curSlot == NULL ) { //&& mailboxes[mbox_id % MAXMBOX].consumerQueue == NULL) {
+        // TODO block me and add to producer queue
+        return -2;
     }
+    curSlot->inUse = 1;
+    strcpy(&curSlot->mailSlot, msg_ptr);
+    curSlot->slotSize = msg_size;
 
+    /* Adds the message to the message queue */
+    if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
+        mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
+    } else {
+        struct slot* next = mailboxes[mbox_id % MAXMBOX].slotsQueue;
+        while (next->nextSlot != NULL) {
+            next = next->nextSlot;
+        }
+        next->nextSlot = curSlot;
+    }
+    
 
+    /* If the consumer is waiting, unblock them and remove them from the consumer queue */
+    if (mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
+        mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
+        int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
+        mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
 
+        unblockProc(pid);
+    } 
     return 0;
 }
 
