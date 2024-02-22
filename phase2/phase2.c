@@ -47,6 +47,14 @@ void phase2_start_service_processes(void){
     // Phase 2 (I don’t expect that it will), then this is the place to call spork() to
     // create them.
 
+    /* Creates the interupt mailboxes */
+    MboxCreate(1, sizeof(int));
+    MboxCreate(1, sizeof(int));
+    MboxCreate(1, sizeof(int));
+    MboxCreate(1, sizeof(int));
+    MboxCreate(1, sizeof(int));
+    MboxCreate(1, sizeof(int));
+
 }
 
 
