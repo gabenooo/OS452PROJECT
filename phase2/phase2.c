@@ -15,6 +15,7 @@ struct mailbox {
     // pointer 
     struct slot * end;
     int numSlots;
+    int numSlotsInUse;
 
     //not sure if we need this:
     struct mailSlot* nextMailBox;
@@ -91,18 +92,28 @@ int MboxCreate(int slots, int slot_size){
     // first error check
     if ( (slots < 0|| slot_size < 0) || (slot_size > MAX_MESSAGE)) return -1;
     int newId = getNewId();
-    // check if mailbox is full: 
+    // check if mailboxs is full: 
     if (newId == -1) return -1;
-    
+
+    // set up the mail box
     mailboxes[newId].id = newId;
-    mailboxes[newId].start = getStartSlot(slots);
-    mailboxes[newId].end = mailboxes[newId].start + slots;
-    mailboxes[newId].cur = &mailSlots[mailboxes[newId].start];
-    for (int i = mailboxes[newId].start; i < mailboxes[newId].end; i++){
-        mailSlots[i].inUse = 1;
-        mailSlots[i].slotSize = slot_size;
-        //mailSlots[i].mailSlot = NULL;
+
+    if (slots == 0){
+        mailboxes[newId].start = NULL;
+    } else {
+        mailboxes[newId].start = getStartSlot();
+        // error here if slots are full
+        if (mailboxes[newId].start == NULL){
+            return -1;
+        }
     }
+
+    mailboxes[newId].end = mailboxes[newId].start;
+    mailboxes[newId].numSlots = slots;
+    mailboxes[newId].numSlotsInUse = 1;
+  
+    mailSlots[newId].start->inUse = 1;
+    mailSlots[newId].start.slotSize = slot_size;
 
     return newId;
 }
