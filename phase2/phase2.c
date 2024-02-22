@@ -221,10 +221,30 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
 
     struct slot* curSlot = getStartSlot();
 
-    /* If we are out of space */
-    if (curSlot == NULL ) { //&& mailboxes[mbox_id % MAXMBOX].consumerQueue == NULL) {
-        // TODO block me and add to producer queue
+    if (curSlot == NULL) {
         return -2;
+    }
+
+    /* If we are out of space */
+    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse == mailboxes[mbox_id % MAXMBOX].numSlots ) { 
+        // TODO block me and add to producer queue
+        // queue up proc and block
+        int QueProcID = getpid();
+        shadowProcTable[QueProcID % MAXPROC].blocked = 1;
+        shadowProcTable[QueProcID % MAXPROC].pid = QueProcID;
+
+        struct shadowPCB* cur = mailboxes[mbox_id].producerQueue;
+        if (cur == NULL){
+            mailboxes[mbox_id].producerQueue = &shadowProcTable[QueProcID % MAXPROC];
+        } else {
+            while (cur->pNext != NULL){
+                cur = cur->pNext;
+            }
+            cur->pNext = &shadowProcTable[QueProcID % MAXPROC];
+        }
+        blockMe(98);
+        mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
+
     }
     curSlot->inUse = 1;
     strcpy(curSlot->mailSlot, msg_ptr);
@@ -240,6 +260,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         }
         next->nextSlot = curSlot;
     }
+    mailboxes[mbox_id % MAXMBOX].numSlotsInUse++;
     
 
     /* If the consumer is waiting, unblock them and remove them from the consumer queue */
@@ -261,6 +282,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // the ordering rules we discussed earlier in the spec). Otherwise it will block until
     // a message is available. (But note the special rules for zero-slot mailboxes, see
     // above.)
+    int slotSize = 0;
     
     // todo: error checking (RETURN -1)
     if (mbox_id < 0 || mbox_id > MAXMBOX){
@@ -271,7 +293,17 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     if (mailboxes[mbox_id].slotsQueue != NULL){
         // a message is waiting so we copy it over
         strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
-        return mailboxes[mbox_id].slotsQueue->slotSize;
+        slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
+
+        /* Removes message from slot queue */
+        mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
+        mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
+        /* Removes a producer if present from the producer queue */
+        if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
+            unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
+        }
+
+        return slotSize;
     } else {
         // queue up proc and block
         int QueProcID = getpid();
@@ -289,7 +321,16 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         }
         blockMe(99);
         strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
-        return mailboxes[mbox_id].slotsQueue->slotSize;
+        slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
+        
+        /* Removes message from slot queue */
+        mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
+        mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
+        /* Removes a producer if present from the producer queue */
+        if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
+            unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
+        }
+        return slotSize;
     }
 
     return 0;
