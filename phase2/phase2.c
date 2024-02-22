@@ -1,6 +1,7 @@
 #include <phase2.h>
 #include <phase1.h>
 #include <stdlib.h>
+#include <phase1.h>
 
 
 //systemCallVec;
@@ -33,8 +34,6 @@ struct shadowPCB {
 };
 
 struct shadowPCB shadowProcTable[MAXPROC];
-
-
 
 
 struct mailbox {
@@ -120,6 +119,8 @@ void phase2_init(void) {
     }
     curMailboxID = 0;
     curSlotID = 0;
+
+    memset(shadowProcTable, 0, sizeof(shadowProcTable));
 
 }
 
