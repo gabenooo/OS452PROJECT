@@ -1,4 +1,5 @@
 #include <phase2.h>
+#include <phase1.h>
 #include <stdlib.h>
 
 
@@ -44,11 +45,8 @@ struct mailbox {
     struct slot * end;
     int numSlots;
     int numSlotsInUse;
-
-    //not sure if we need this:
-    struct mailSlot* nextMailBox;
-
-    //struct mailSlot*;
+    struct shadowPCB* producerQueue;
+    struct shadowPCB* consumerQueue;
 };
 
 //queue of producer and consumer, 
@@ -63,7 +61,6 @@ struct slot{
 };
 
 static struct mailbox mailboxes[MAXMBOX];
-
 static struct slot mailSlots[MAXSLOTS];
 
 int curMailboxID;
@@ -105,9 +102,9 @@ void phase2_init(void) {
         mailboxes[i].end = NULL;
         mailboxes[i].numSlots = 0;
         mailboxes[i].numSlotsInUse = 0;
+        mailboxes[i].producerQueue = NULL;
+        mailboxes[i].consumerQueue = NULL;
 
-        //mailboxes[i].cur = NULL;
-        mailboxes[i].nextMailBox = NULL;
     }
 
     /* MailSlot initialization */
@@ -181,7 +178,8 @@ int MboxRelease(int mbox_id){
     mailboxes[mbox_id].id = 0;
     mailboxes[mbox_id].numSlots = 0;
     mailboxes[mbox_id].numSlotsInUse = 0;
-    mailboxes[mbox_id].nextMailBox = NULL;
+    mailboxes[mbox_id].producerQueue = NULL;
+    mailboxes[mbox_id].consumerQueue = NULL;
 
     // free each mail slot
     struct slot * cur = mailboxes[mbox_id].start;
@@ -209,7 +207,9 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     // If there are no consumers queued and no space available to queue a message,
     // then this process will block until the message can be delivered - either to a
     // consumer, or into a mail slot.
-    
+
+
+
 
     return 0;
 }
