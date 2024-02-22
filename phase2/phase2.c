@@ -65,8 +65,8 @@ void phase2_init(void) {
     /* Mailbox initialization */
     for (int i = 0; i < MAXMBOX; i++) {
         mailboxes[i].id = -1;
-        mailboxes[i].start = 0;
-        mailboxes[i].end = 0;
+        mailboxes[i].start = NULL;
+        mailboxes[i].end = NULL;
         //mailboxes[i].cur = NULL;
         mailboxes[i].nextMailBox = NULL;
     }
@@ -114,8 +114,8 @@ int MboxCreate(int slots, int slot_size){
     mailboxes[newId].numSlots = slots;
     mailboxes[newId].numSlotsInUse = 1;
   
-    mailSlots[newId].start->inUse = 1;
-    mailSlots[newId].start.slotSize = slot_size;
+    mailboxes[newId].start->inUse = 1;
+    mailboxes[newId].start->slotSize = slot_size;
 
     return newId;
 }
@@ -148,11 +148,11 @@ int MboxRelease(int mbox_id){
 
 // }
     // free each mail slot (might have to change this later)
-    for (int i = mailboxes[mbox_id].start; i < mailboxes[mbox_id].end; i++){
-        mailSlots[i].inUse = 0;
-        mailSlots[i].slotSize = 0;
-        //mailSlots[i].mailSlot = NULL;
-    }
+    // for (int i = mailboxes[mbox_id].start; i < mailboxes[mbox_id].end; i++){
+    //     mailSlots[i].inUse = 0;
+    //     mailSlots[i].slotSize = 0;
+    //     //mailSlots[i].mailSlot = NULL;
+    // }
 
 
     return 0;
@@ -248,7 +248,7 @@ int getNewId() {
 }
 
 /* Returns the index of the start slot for the series of slots requested */
-struct Slot* getStartSlot(int numOfSlots) {
+struct slot* getStartSlot() {
 
     for ( int i = curSlotID + 1; i < MAXSLOTS + curSlotID + 1; i++ ) {
         if ( mailSlots[i % MAXSLOTS].inUse == 0 ) {
