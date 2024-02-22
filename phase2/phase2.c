@@ -260,6 +260,37 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // the ordering rules we discussed earlier in the spec). Otherwise it will block until
     // a message is available. (But note the special rules for zero-slot mailboxes, see
     // above.)
+    
+    // todo: error checking (RETURN -1)
+    if (mbox_id < 0 || mbox_id > MAXMBOX){
+        return -1;
+    } // then check buffer len
+
+
+    if (mailboxes[mbox_id].slotsQueue != NULL){
+        // a message is waiting so we copy it over
+        strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+        return mailboxes[mbox_id].slotsQueue->slotSize;
+    } else {
+        // queue up proc and block
+        int QueProcID = getpid();
+        shadowProcTable[QueProcID % MAXPROC].blocked = 1;
+        shadowProcTable[QueProcID % MAXPROC].pid = QueProcID;
+
+        struct shadowPCB* cur = mailboxes[mbox_id].consumerQueue;
+        if (cur == NULL){
+            mailboxes[mbox_id].consumerQueue = &shadowProcTable[QueProcID % MAXPROC];
+        } else {
+            while (cur->cNext != NULL){
+                cur = cur->cNext;
+            }
+            cur->cNext = &shadowProcTable[QueProcID % MAXPROC];
+        }
+        blockMe(99);
+        strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+        return mailboxes[mbox_id].slotsQueue->slotSize;
+    }
+
     return 0;
 }
 
