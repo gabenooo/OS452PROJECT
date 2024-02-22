@@ -150,22 +150,24 @@ int MboxRelease(int mbox_id){
     // only one producer, and one consumer, can be waking up at a time - meaning
     // that it takes a while to “flush” any blocked producers and consumers from the
     // various queues.
-// struct mailbox {
-//     int id;
-//     int start;
-//     int end;
-//     struct slot* cur;
+    mailboxes[mbox_id].id = 0;
+    mailboxes[mbox_id].numSlots = 0;
+    mailboxes[mbox_id].numSlotsInUse = 0;
+    mailboxes[mbox_id].nextMailBox = NULL;
+
+    // free each mail slot
+    struct slot * cur = mailboxes[mbox_id].start;
+    while (cur != NULL){
+        cur->inUse = 0;
+        cur->slotSize = 0;
+        for ( int j = 0; j < MAX_MESSAGE; j++) {
+            cur->mailSlot[j] = 0;
+        }
+        struct slot * prev = cur;
+        cur = cur->nextSlot;
+        prev->nextSlot = NULL;
+    }   
     
-//     struct mailSlot* nextMailBox;
-
-// }
-    // free each mail slot (might have to change this later)
-    // for (int i = mailboxes[mbox_id].start; i < mailboxes[mbox_id].end; i++){
-    //     mailSlots[i].inUse = 0;
-    //     mailSlots[i].slotSize = 0;
-    //     //mailSlots[i].mailSlot = NULL;
-    // }
-
 
     return 0;
 }
@@ -179,6 +181,8 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     // If there are no consumers queued and no space available to queue a message,
     // then this process will block until the message can be delivered - either to a
     // consumer, or into a mail slot.
+    
+
     return 0;
 }
 
