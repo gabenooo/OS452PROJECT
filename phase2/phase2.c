@@ -188,7 +188,7 @@ int MboxRelease(int mbox_id){
     if (mailboxes[mbox_id].id < 0) {
         return -1;
     }
-    
+
     mailboxes[mbox_id].id = -1;
     mailboxes[mbox_id].numSlots = 0;
     mailboxes[mbox_id].numSlotsInUse = 0;
@@ -380,6 +380,50 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     // of Send() and Recv(), to instead create (private) helper functions, which both
     // the Cond and non-Cond versions of your functions can call. But remember: you
     // must not change the declaration of any function called by the testcases!
+    if (msg_size > MAX_MESSAGE) {
+        USLOSS_Console("ERROR Message size too big %d. Max is %d\n", msg_size, MAX_MESSAGE);
+        return -1;
+    }
+    if (mailboxes[mbox_id].id < 0) {
+        return -1;
+    }
+
+    struct slot* curSlot = getStartSlot();
+
+    if (curSlot == NULL) {
+        return -2;
+    }
+
+    /* If we are out of space */
+    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse > mailboxes[mbox_id % MAXMBOX].numSlots ) { 
+        return -2;
+    }
+
+    curSlot->inUse = 1;
+    strcpy(curSlot->mailSlot, msg_ptr);
+    curSlot->slotSize = msg_size;
+
+    /* Adds the message to the message queue */
+    if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
+        mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
+    } else {
+        struct slot* next = mailboxes[mbox_id % MAXMBOX].slotsQueue;
+        while (next->nextSlot != NULL) {
+            next = next->nextSlot;
+        }
+        next->nextSlot = curSlot;
+    }
+    mailboxes[mbox_id % MAXMBOX].numSlotsInUse++;
+    
+
+    /* If the consumer is waiting, unblock them and remove them from the consumer queue */
+    if (mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
+        mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
+        int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
+        mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
+
+        unblockProc(pid);
+    } 
     return 0;
 }
 
