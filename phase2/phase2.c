@@ -67,6 +67,11 @@ static struct slot mailSlots[MAXSLOTS];
 int curMailboxID;
 int curSlotID;
 
+/* Declaring helper functions here since we can't update the .h file*/
+struct slot* getStartSlot();
+int getNewId();
+
+
 void phase2_start_service_processes(void){
     // Called by Phase 1 from init, once processes are running but before the testcase
     // begins. If your implementation requires any service processes to be running for
@@ -385,9 +390,6 @@ void wakeupByDevice(int type, int unit, int status){
     //????????
 }
 
-// 
-extern void (*systemCallVec[])(USLOSS_Sysargs *args);
-
 /******************** ALL THE HELPER FUNCTIONS ********************/
 
 /* Gets an empty mailbox ID, returns -1 if full */
@@ -401,6 +403,8 @@ int getNewId() {
 
     return -1;
 }
+
+extern void (*systemCallVec[])(USLOSS_Sysargs *args);
 
 /* Returns the index of the start slot for the series of slots requested */
 struct slot* getStartSlot() {
