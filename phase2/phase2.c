@@ -241,7 +241,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         USLOSS_Console("ERROR Message size too big %d. Max is %d\n", msg_size, MAX_MESSAGE);
         return -1;
     }
-    if (mbox_id < 0) {
+    if (mailboxes[mbox_id].id < 0) {
         return -1;
     }
 
@@ -268,7 +268,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         }
         /* Block process until space is available, if mailbox destroyed then return -1 */
         blockMe(98);
-        if (mbox_id < 0) { return -3; }
+        if (mailboxes[mbox_id].id < 0) { return -3; }
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
 
     }
@@ -347,7 +347,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         }
 
         blockMe(99);
-        if (mbox_id < 0) { return -3; }
+        if (mailboxes[mbox_id].id < 0) { return -3; }
         strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
         slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
 
