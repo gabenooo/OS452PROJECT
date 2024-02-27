@@ -184,6 +184,11 @@ int MboxRelease(int mbox_id){
     // only one producer, and one consumer, can be waking up at a time - meaning
     // that it takes a while to “flush” any blocked producers and consumers from the
     // various queues.
+
+    if (mailboxes[mbox_id].id < 0) {
+        return -1;
+    }
+    
     mailboxes[mbox_id].id = -1;
     mailboxes[mbox_id].numSlots = 0;
     mailboxes[mbox_id].numSlotsInUse = 0;
@@ -219,8 +224,6 @@ int MboxRelease(int mbox_id){
             conCur = conCur->cNext;
         }
         mailboxes[mbox_id].consumerQueue = NULL;
-
-        return -1;
     }
     
 
