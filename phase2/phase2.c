@@ -184,11 +184,10 @@ int MboxRelease(int mbox_id){
     // only one producer, and one consumer, can be waking up at a time - meaning
     // that it takes a while to “flush” any blocked producers and consumers from the
     // various queues.
-    mailboxes[mbox_id].id = 0;
+    mailboxes[mbox_id].id = -1;
     mailboxes[mbox_id].numSlots = 0;
     mailboxes[mbox_id].numSlotsInUse = 0;
-    mailboxes[mbox_id].producerQueue = NULL;
-    mailboxes[mbox_id].consumerQueue = NULL;
+    
     mailboxes[mbox_id].slotsQueue = NULL;
 
 
@@ -204,6 +203,23 @@ int MboxRelease(int mbox_id){
         cur = cur->nextSlot;
         prev->nextSlot = NULL;
     }   
+
+    //all blocked producers and consumers will be unblocked, and return -1
+    struct shadowPCB* proCur = mailboxes[mbox_id].producerQueue;
+    struct shadowPCB* conCur = mailboxes[mbox_id].consumerQueue;
+    if (proCur != NULL || conCur != NULL){
+        while (proCur != NULL){
+            unblockProc(proCur->pid);
+        }
+        mailboxes[mbox_id].producerQueue = NULL;
+        
+        while (conCur != NULL){
+            unblockProc(conCur->pid);
+        }
+        mailboxes[mbox_id].consumerQueue = NULL;
+
+        return -1;
+    }
     
 
     return 0;
