@@ -10,6 +10,14 @@
 //slots with size MAX_MESSAGE
 
 //shadow proccess table
+enum INTERRUPTS {
+    CLOCK = 1,
+    TIMER = 2,
+    TERMINAL = 3,
+    SYS_CALL = 4,
+    DISK = 5,
+    MEMORY_MANAGEMENT = 6
+};
 
 struct shadowPCB {
     int pid; // if pid =0, proccess is dead
@@ -51,7 +59,7 @@ struct mailbox {
 };
 
 //queue of producer and consumer, 
-// can get pid when they call mailbox send we call call getPID -> then use that to make a copy of the proccess table entry in our shadow table
+// can get pid when they call mailbConsoleox send we call call getPID -> then use that to make a copy of the proccess table entry in our shadow table
 
 
 struct slot{
@@ -92,6 +100,10 @@ void phase2_start_service_processes(void){
 void phase2_clockHandler(void){
     // Called by Phase 1 from the clock interrupt. Use it to implement any logic
     // that you want to run every time that the clock interrupt occurs.
+    if (mailboxes[CLOCK].consumerQueue != NULL) {
+        MboxSend(CLOCK, NULL, 0);
+    }
+    
 }
 
 
@@ -501,10 +513,14 @@ void waitDevice(int type, int unit, int *status){
     // message arrives, it will store the status (remember, the status was sent, as the
     // message payload, from the interrupt handler) into the out parameter and then
     // return.
+
+    int returnCode = MboxRecv(type, NULL, 0);
+    status = &returnCode;
 }
 void wakeupByDevice(int type, int unit, int status){
     //????????
 }
+
 
 /******************** ALL THE HELPER FUNCTIONS ********************/
 
