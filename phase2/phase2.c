@@ -210,11 +210,13 @@ int MboxRelease(int mbox_id){
     if (proCur != NULL || conCur != NULL){
         while (proCur != NULL){
             unblockProc(proCur->pid);
+            proCur = proCur->pNext;
         }
         mailboxes[mbox_id].producerQueue = NULL;
         
         while (conCur != NULL){
             unblockProc(conCur->pid);
+            conCur = conCur->cNext;
         }
         mailboxes[mbox_id].consumerQueue = NULL;
 
