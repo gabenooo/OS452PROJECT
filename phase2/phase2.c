@@ -226,7 +226,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     }
 
     /* If we are out of space */
-    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse == mailboxes[mbox_id % MAXMBOX].numSlots ) { 
+    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse > mailboxes[mbox_id % MAXMBOX].numSlots ) { 
         // TODO block me and add to producer queue
         // queue up proc and block
         int QueProcID = getpid();
@@ -322,7 +322,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         blockMe(99);
         strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
         slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
-        
+
         /* Removes message from slot queue */
         mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
         mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
