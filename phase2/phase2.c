@@ -361,17 +361,24 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
 
         blockMe(99);
         if (mailboxes[mbox_id].id < 0) { return -3; }
-        strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
-        slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
+        if (mailboxes[mbox_id].numSlots > 0){
+            
+            strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+            slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
 
-        /* Removes message from slot queue */
-        mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
-        mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
-        /* Removes a producer if present from the producer queue */
-        if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
-            unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
+            /* Removes message from slot queue */
+            mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
+            mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
+            /* Removes a producer if present from the producer queue */
+            if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
+                unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
+            }
+            return slotSize; 
+            
+        } else {
+            return 0;
         }
-        return slotSize;
+            
     }
 
     return 0;
