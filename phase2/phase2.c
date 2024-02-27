@@ -279,8 +279,6 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
 
     }
 
-    USLOSS_Console("Alive\n");
-
     /* For non empty mailboxes add the memssage to the queue*/
     if (!mailboxes[mbox_id].numSlots <= 0) {
         curSlot->inUse = 1;
@@ -309,11 +307,9 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
         int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
-        USLOSS_Console("Unblocking pid of %d\n", pid);
         unblockProc(pid);
 
     } else if (mailboxes[mbox_id].numSlots <= 0) {
-        USLOSS_Console("blocking\n");
         blockMe(97);
         goto ConsumerQueue;
     }
