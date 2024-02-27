@@ -440,6 +440,31 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // of Send() and Recv(), to instead create (private) helper functions, which both
     // the Cond and non-Cond versions of your functions can call. But remember: you
     // must not change the declaration of any function called by the testcases!
+    int slotSize = 0;
+    
+    // todo: error checking (RETURN -1)
+    if (mbox_id < 0 || mbox_id > MAXMBOX){
+        return -1;
+    } // then check buffer len
+
+
+    if (mailboxes[mbox_id].slotsQueue != NULL){
+        // a message is waiting so we copy it over
+        strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+        slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
+
+        /* Removes message from slot queue */
+        mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
+        mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
+        /* Removes a producer if present from the producer queue */
+        if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
+            unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
+        }
+
+        return slotSize;
+    } else {
+        return -2;
+    }
     return 0;
 }
 
