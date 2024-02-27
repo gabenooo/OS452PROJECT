@@ -149,6 +149,8 @@ int MboxCreate(int slots, int slot_size){
         mailboxes[newId].start = NULL;
     } else {
         mailboxes[newId].start = getStartSlot();
+        mailboxes[newId].start->inUse = 1;
+        mailboxes[newId].start->slotSize = slot_size;
         // error here if slots are full
         if (mailboxes[newId].start == NULL){
             return -1;
@@ -159,10 +161,7 @@ int MboxCreate(int slots, int slot_size){
     mailboxes[newId].end = mailboxes[newId].start;
     mailboxes[newId].numSlots = slots;
     mailboxes[newId].numSlotsInUse = 1;
-  
-    mailboxes[newId].start->inUse = 1;
-    mailboxes[newId].start->slotSize = slot_size;
-
+    
     return newId;
 }
 
@@ -278,7 +277,6 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     curSlot->inUse = 1;
     strcpy(curSlot->mailSlot, msg_ptr);
     curSlot->slotSize = msg_size;
-
     /* Adds the message to the message queue */
     if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
