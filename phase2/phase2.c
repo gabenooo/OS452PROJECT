@@ -223,6 +223,9 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         USLOSS_Console("ERROR Message size too big %d. Max is %d\n", msg_size, MAX_MESSAGE);
         return -1;
     }
+    if (mbox_id < 0) {
+        return -1;
+    }
 
     struct slot* curSlot = getStartSlot();
 
@@ -232,8 +235,6 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
 
     /* If we are out of space */
     if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse > mailboxes[mbox_id % MAXMBOX].numSlots ) { 
-        // TODO block me and add to producer queue
-        // queue up proc and block
         int QueProcID = getpid();
         shadowProcTable[QueProcID % MAXPROC].blocked = 1;
         shadowProcTable[QueProcID % MAXPROC].pid = QueProcID;
@@ -247,7 +248,9 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
             }
             cur->pNext = &shadowProcTable[QueProcID % MAXPROC];
         }
+        /* Block process until space is available, if mailbox destroyed then return -1 */
         blockMe(98);
+        if (mbox_id < 0) { return -3; }
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
 
     }
@@ -324,7 +327,9 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             }
             cur->cNext = &shadowProcTable[QueProcID % MAXPROC];
         }
+
         blockMe(99);
+        if (mbox_id < 0) { return -3; }
         strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
         slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
 
