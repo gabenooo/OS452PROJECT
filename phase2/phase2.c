@@ -300,16 +300,23 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         mailboxes[mbox_id % MAXMBOX].numSlotsInUse++;
     }
     
-    USLOSS_Console("After if\n");
+    
 
     /* If the consumer is waiting, unblock them and remove them from the consumer queue */
+    ConsumerQueue:
     if (mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
+        
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
         int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
-
+        USLOSS_Console("Unblocking pid of %d\n", pid);
         unblockProc(pid);
-    } 
+
+    } else if (mailboxes[mbox_id].numSlots <= 0) {
+        USLOSS_Console("blocking\n");
+        blockMe(97);
+        goto ConsumerQueue;
+    }
     return 0;
 }
 
@@ -321,6 +328,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // the ordering rules we discussed earlier in the spec). Otherwise it will block until
     // a message is available. (But note the special rules for zero-slot mailboxes, see
     // above.)
+    
     int slotSize = 0;
     
     // todo: error checking (RETURN -1)
