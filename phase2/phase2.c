@@ -144,24 +144,25 @@ int MboxCreate(int slots, int slot_size){
     // set up the mail box
     mailboxes[newId].id = newId;
 
-
     if (slots == 0){
         mailboxes[newId].start = NULL;
+        mailboxes[newId].numSlotsInUse = 0;
     } else {
         mailboxes[newId].start = getStartSlot();
+        mailboxes[newId].start->inUse = 1;
+        mailboxes[newId].start->slotSize = slot_size;
+        mailboxes[newId].numSlotsInUse = 1;
         // error here if slots are full
         if (mailboxes[newId].start == NULL){
             return -1;
         }
 
     }
-
     mailboxes[newId].end = mailboxes[newId].start;
     mailboxes[newId].numSlots = slots;
-    mailboxes[newId].numSlotsInUse = 1;
+    
   
-    mailboxes[newId].start->inUse = 1;
-    mailboxes[newId].start->slotSize = slot_size;
+    
 
     return newId;
 }
@@ -239,7 +240,8 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     // If there are no consumers queued and no space available to queue a message,
     // then this process will block until the message can be delivered - either to a
     // consumer, or into a mail slot.
-    
+    struct slot* curSlot;
+
     if (msg_size > MAX_MESSAGE) {
         USLOSS_Console("ERROR Message size too big %d. Max is %d\n", msg_size, MAX_MESSAGE);
         return -1;
@@ -248,10 +250,11 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         return -1;
     }
 
-    struct slot* curSlot = getStartSlot();
-
-    if (curSlot == NULL) {
-        return -2;
+    if (!mailboxes[mbox_id].numSlots <= 0) {
+        curSlot = getStartSlot();
+        if (curSlot == NULL) {
+            return -2;
+        }
     }
 
     /* If we are out of space */
@@ -275,22 +278,29 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
 
     }
-    curSlot->inUse = 1;
-    strcpy(curSlot->mailSlot, msg_ptr);
-    curSlot->slotSize = msg_size;
 
-    /* Adds the message to the message queue */
-    if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
-        mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
-    } else {
-        struct slot* next = mailboxes[mbox_id % MAXMBOX].slotsQueue;
-        while (next->nextSlot != NULL) {
-            next = next->nextSlot;
+    USLOSS_Console("Alive\n");
+
+    /* For non empty mailboxes add the memssage to the queue*/
+    if (!mailboxes[mbox_id].numSlots <= 0) {
+        curSlot->inUse = 1;
+        strcpy(curSlot->mailSlot, msg_ptr);
+        curSlot->slotSize = msg_size;
+
+        /* Adds the message to the message queue */
+        if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
+            mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
+        } else {
+            struct slot* next = mailboxes[mbox_id % MAXMBOX].slotsQueue;
+            while (next->nextSlot != NULL) {
+                next = next->nextSlot;
+            }
+            next->nextSlot = curSlot;
         }
-        next->nextSlot = curSlot;
+        mailboxes[mbox_id % MAXMBOX].numSlotsInUse++;
     }
-    mailboxes[mbox_id % MAXMBOX].numSlotsInUse++;
     
+    USLOSS_Console("After if\n");
 
     /* If the consumer is waiting, unblock them and remove them from the consumer queue */
     if (mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
@@ -489,6 +499,7 @@ void wakeupByDevice(int type, int unit, int status){
 
 /* Gets an empty mailbox ID, returns -1 if full */
 int getNewId() {
+    // return.getStartSlot
     for (int i = curMailboxID + 1; i < MAXMBOX; i++) {
         if (mailboxes[i].id == -1) {
             curMailboxID = i;
