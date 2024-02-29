@@ -626,7 +626,7 @@ extern void (*systemCallVec[])(USLOSS_Sysargs *args);
 
 /* Returns the index of the start slot for the series of slots requested */
 struct slot* getStartSlot() {
-
+    
     for ( int i = curSlotID + 1; i < MAXSLOTS + curSlotID + 1; i++ ) {
         if ( mailSlots[i % MAXSLOTS].inUse == 0 ) {
             curSlotID = i % MAXSLOTS;
