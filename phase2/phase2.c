@@ -137,7 +137,8 @@ void phase2_init(void) {
     }
 
     /* MailSlot initialization */
-    for ( int i = 0; i < MAXSLOTS; i++) {
+    for ( int i = 0; i < MAXSLOTS; i++) {    
+
         mailSlots[i].inUse = 0;
         mailSlots[i].slotSize = 0;
         for ( int j = 0; j < MAX_MESSAGE; j++) {
@@ -173,7 +174,8 @@ int MboxCreate(int slots, int slot_size){
     } else {
         mailboxes[newId].start = getStartSlot();
         mailboxes[newId].start->inUse = 1;
-        mailboxes[newId].start->slotSize = slot_size;
+        mailboxes[newId].start->slotSize = slot_size; 
+
         mailboxes[newId].numSlotsInUse = 1;
         // error here if slots are full
         if (mailboxes[newId].start == NULL){
@@ -541,6 +543,20 @@ void waitDevice(int type, int unit, int *status){
 }
 void wakeupByDevice(int type, int unit, int status){
     //????????
+}
+
+/******************** INTERUPT HANDLERS ********************/
+
+void termInteruptHandler(int unit, void* payload) {
+
+    int unit = (int)(long)payload;
+    int status = 0;
+    USLOSS_DeviceInput(USLOSS_TERM_DEV, unit, &status);
+    MboxCondSend(USLOSS_TERM_DEV /* TODO */, &status, sizeof(status));
+}
+
+void diskInteruptHandler(int unit, void* payload) {
+
 }
 
 
