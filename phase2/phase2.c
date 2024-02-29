@@ -175,19 +175,10 @@ int MboxCreate(int slots, int slot_size){
     mailboxes[newId].id = newId;
     mailboxes[newId].slotSize = slot_size;
 
-    if (slots == 0){
-        mailboxes[newId].start = NULL;
-        mailboxes[newId].numSlotsInUse = 0;
-    } else {
-        mailboxes[newId].start = getStartSlot();
-        mailboxes[newId].start->inUse = 1;
-        mailboxes[newId].numSlotsInUse = 1;
-        // error here if slots are full
-        if (mailboxes[newId].start == NULL){
-            return -1;
-        }
-
-    }
+   
+    mailboxes[newId].start = NULL;
+    mailboxes[newId].numSlotsInUse = 0;
+    
     mailboxes[newId].end = mailboxes[newId].start;
     mailboxes[newId].numSlots = slots;
 
