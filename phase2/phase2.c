@@ -242,7 +242,6 @@ int MboxRelease(int mbox_id){
         }
         mailboxes[mbox_id].consumerQueue = NULL;
     }
-    
 
     return 0;
 }
@@ -274,7 +273,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     }
 
     /* If we are out of space */
-    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse > mailboxes[mbox_id % MAXMBOX].numSlots ) { 
+    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots ) { 
         int QueProcID = getpid();
         shadowProcTable[QueProcID % MAXPROC].blocked = 1;
         shadowProcTable[QueProcID % MAXPROC].pid = QueProcID;
@@ -289,7 +288,9 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
             cur->pNext = &shadowProcTable[QueProcID % MAXPROC];
         }
         /* Block process until space is available, if mailbox destroyed then return -1 */
+        //USLOSS_Console("Blocking %d\n", mbox_id);
         blockMe(98);
+        //USLOSS_Console("Unblocking %d\n", mbox_id);
         if (mailboxes[mbox_id].id < 0) { return -3; }
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
 
@@ -316,6 +317,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
 
     /* If the consumer is waiting, unblock them and remove them from the consumer queue */
     ConsumerQueue:
+    if (mailboxes[mbox_id].id < 0) { return -3; }
     if (mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
         
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
@@ -324,7 +326,10 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         unblockProc(pid);
 
     } else if (mailboxes[mbox_id].numSlots <= 0) {
-        blockMe(97);
+        //USLOSS_Console("Blocking %d\n", mbox_id);
+        blockMe(98);
+        //USLOSS_Console("Unblocking %d\n", mbox_id);
+        
         goto ConsumerQueue;
     }
     return 0;
