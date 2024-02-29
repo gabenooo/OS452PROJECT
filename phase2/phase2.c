@@ -54,6 +54,7 @@ struct mailbox {
     struct slot * end;
     int numSlots;
     int numSlotsInUse;
+    int slotSize;
     struct slot*      slotsQueue;
     struct shadowPCB* producerQueue;
     struct shadowPCB* consumerQueue;
@@ -65,7 +66,6 @@ struct mailbox {
 
 struct slot{
     int inUse;
-    int slotSize;
     char mailSlot[MAX_MESSAGE];
     struct slot * nextSlot;
 };
@@ -134,6 +134,7 @@ void phase2_init(void) {
         mailboxes[i].end = NULL;
         mailboxes[i].numSlots = 0;
         mailboxes[i].numSlotsInUse = 0;
+        mailboxes[i].slotSize = 0;
         mailboxes[i].producerQueue = NULL;
         mailboxes[i].consumerQueue = NULL;
         mailboxes[i].slotsQueue = NULL;
@@ -144,7 +145,6 @@ void phase2_init(void) {
     for ( int i = 0; i < MAXSLOTS; i++) {    
 
         mailSlots[i].inUse = 0;
-        mailSlots[i].slotSize = 0;
         for ( int j = 0; j < MAX_MESSAGE; j++) {
             mailSlots[i].mailSlot[j] = 0;
         }
@@ -171,6 +171,7 @@ int MboxCreate(int slots, int slot_size){
 
     // set up the mail box
     mailboxes[newId].id = newId;
+    mailboxes[newId].slotSize = slot_size;
 
     if (slots == 0){
         mailboxes[newId].start = NULL;
@@ -178,8 +179,6 @@ int MboxCreate(int slots, int slot_size){
     } else {
         mailboxes[newId].start = getStartSlot();
         mailboxes[newId].start->inUse = 1;
-        mailboxes[newId].start->slotSize = slot_size; 
-
         mailboxes[newId].numSlotsInUse = 1;
         // error here if slots are full
         if (mailboxes[newId].start == NULL){
@@ -189,9 +188,6 @@ int MboxCreate(int slots, int slot_size){
     }
     mailboxes[newId].end = mailboxes[newId].start;
     mailboxes[newId].numSlots = slots;
-    
-  
-    
 
     return newId;
 }
@@ -222,15 +218,13 @@ int MboxRelease(int mbox_id){
     mailboxes[mbox_id].id = -1;
     mailboxes[mbox_id].numSlots = 0;
     mailboxes[mbox_id].numSlotsInUse = 0;
-    
+    mailboxes[mbox_id].slotSize = 0;
     mailboxes[mbox_id].slotsQueue = NULL;
-
 
     // free each mail slot
     struct slot * cur = mailboxes[mbox_id].start;
     while (cur != NULL){
         cur->inUse = 0;
-        cur->slotSize = 0;
         for ( int j = 0; j < MAX_MESSAGE; j++) {
             cur->mailSlot[j] = 0;
         }
@@ -271,11 +265,11 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     // consumer, or into a mail slot.
     struct slot* curSlot;
 
-    if (msg_size > MAX_MESSAGE) {
-        USLOSS_Console("ERROR Message size too big %d. Max is %d\n", msg_size, MAX_MESSAGE);
+    
+    if (mailboxes[mbox_id].id < 0) {
         return -1;
     }
-    if (mailboxes[mbox_id].id < 0) {
+    if (msg_size > mailboxes[mbox_id].slotSize) {
         return -1;
     }
 
@@ -312,7 +306,6 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot->inUse = 1;
         strcpy(curSlot->mailSlot, msg_ptr);
-        curSlot->slotSize = msg_size;
 
         /* Adds the message to the message queue */
         if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
@@ -354,8 +347,6 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // a message is available. (But note the special rules for zero-slot mailboxes, see
     // above.)
     
-    int slotSize = 0;
-    
     // todo: error checking (RETURN -1)
     if (mbox_id < 0 || mbox_id > MAXMBOX){
         return -1;
@@ -365,7 +356,6 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     if (mailboxes[mbox_id].slotsQueue != NULL){
         // a message is waiting so we copy it over
         strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
-        slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
 
         /* Removes message from slot queue */
         mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
@@ -375,7 +365,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
         }
 
-        return slotSize;
+        return mailboxes[mbox_id].slotSize;
     } else {
         // queue up proc and block
         
@@ -393,13 +383,11 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             cur->cNext = &shadowProcTable[QueProcID % MAXPROC];
         }
 
-        USLOSS_Console("blocking\n");
         blockMe(99);
         if (mailboxes[mbox_id].id < 0) { return -3; }
         if (mailboxes[mbox_id].numSlots > 0){
             
             strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
-            slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
 
             /* Removes message from slot queue */
             mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
@@ -408,12 +396,11 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
                 unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
             }
-            return slotSize; 
+            return mailboxes[mbox_id].slotSize; 
             
         } else {
             return 0;
         }
-            
     }
 
     return 0;
@@ -434,11 +421,10 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     // must not change the declaration of any function called by the testcases!
     struct slot* curSlot;
 
-    if (msg_size > MAX_MESSAGE) {
-        USLOSS_Console("ERROR Message size too big %d. Max is %d\n", msg_size, MAX_MESSAGE);
+    if (mailboxes[mbox_id].id < 0) {
         return -1;
     }
-    if (mailboxes[mbox_id].id < 0) {
+    if (msg_size > mailboxes[mbox_id].slotSize) {
         return -1;
     }
 
@@ -458,7 +444,6 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot->inUse = 1;
         strcpy(curSlot->mailSlot, msg_ptr);
-        curSlot->slotSize = msg_size;
 
         /* Adds the message to the message queue */
         if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
@@ -503,7 +488,6 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // of Send() and Recv(), to instead create (private) helper functions, which both
     // the Cond and non-Cond versions of your functions can call. But remember: you
     // must not change the declaration of any function called by the testcases!
-    int slotSize = 0;
     
     // todo: error checking (RETURN -1)
     if (mbox_id < 0 || mbox_id > MAXMBOX){
@@ -514,7 +498,6 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     if (mailboxes[mbox_id].slotsQueue != NULL){
         // a message is waiting so we copy it over
         strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
-        slotSize = mailboxes[mbox_id].slotsQueue->slotSize;
 
         /* Removes message from slot queue */
         mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
@@ -524,7 +507,7 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
         }
 
-        return slotSize;
+        return mailboxes[mbox_id].slotSize;
     } else {
         return -2;
     }
