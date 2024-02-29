@@ -125,8 +125,8 @@ void phase2_init(void) {
     // You must not attempt to spork() any processes, or
     // use any other process-specific functions, since the processes are not yet running
     //USLOSS_IntVec[USLOSS_CLOCK_INT] = phase2_clockHandler; 
-    USLOSS_IntVec[USLOSS_DISK_INT] = termInteruptHandler;
-    USLOSS_IntVec[USLOSS_TERM_INT] = diskInteruptHandler;
+    USLOSS_IntVec[USLOSS_DISK_INT] = diskInteruptHandler;
+    USLOSS_IntVec[USLOSS_TERM_INT] = termInteruptHandler;
     /* Mailbox initialization */
     for (int i = 0; i < MAXMBOX; i++) {
         mailboxes[i].id = -1;
@@ -540,11 +540,10 @@ void waitDevice(int type, int unit, int *status){
     // This function will Recv() from the proper mailbox for this device; when the
     // message arrives, it will store the status (remember, the status was sent, as the
     // message payload, from the interrupt handler) into the out parameter and then
-    // return.
-
-    if (type == 0){
+    // return. 
+    if (type == USLOSS_CLOCK_DEV){
         MboxRecv(CLOCK, status, sizeof(int));
-    } else if (type == 1){
+    } else if (type == USLOSS_DISK_DEV){
         switch (unit) {
             case 1:
                 MboxRecv(DISK01, status, sizeof(int));
@@ -553,9 +552,9 @@ void waitDevice(int type, int unit, int *status){
                 MboxRecv(DISK02, status, sizeof(int));
                 break;
             default:
-                USLOSS_Halt();
+                USLOSS_Halt(0);
         }
-    } else if (type == 2){
+    } else if (type == USLOSS_TERM_DEV){
         switch (unit) {
             case 1:
                 MboxRecv(TERM01, status, sizeof(int));
@@ -570,10 +569,10 @@ void waitDevice(int type, int unit, int *status){
                 MboxRecv(TERM04, status, sizeof(int));
                 break;
             default:
-                USLOSS_Halt();// throw error halt
+                USLOSS_Halt(0);// throw error halt
         }
     } else {
-        USLOSS_Halt();
+        USLOSS_Halt(0);
     }
 
     //USLOSS_Console("Recieved return code %d\n", *status);
@@ -590,7 +589,6 @@ void termInteruptHandler(int _, void* payload) {
     int unit = (int)(long)payload;
     int status = 0;
     USLOSS_DeviceInput(USLOSS_TERM_DEV, unit, &status);
-
     int termDev = -1;
     if (unit == 0) {
         termDev = TERM01;
@@ -600,8 +598,7 @@ void termInteruptHandler(int _, void* payload) {
         termDev = TERM03;
     } else if (unit == 3) {
         termDev = TERM04;
-    }
-
+    } 
     MboxCondSend(termDev, &status, sizeof(status));
 }
 
