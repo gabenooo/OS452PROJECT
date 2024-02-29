@@ -4,8 +4,7 @@
 #include <string.h>
 #include <phase1.h>
 
-# define USLOSS_CLOCK_MACRO 0
-# define USLOSS_CLOCK_MACRO 1
+
 //systemCallVec;
 
 //slots with size MAX_MESSAGE
@@ -20,8 +19,6 @@ enum INTERRUPTS {
     MEMORY_MANAGEMENT = 5,
     ILLEGAL_INSTRUCTION = 6
 };
-// use define clock is 0, disk 0, 1 , terminal 0,1,2,3 The unit field must be a valid value
-// (0 for clock; 0,1 for disk; 0,1,2,3 for terminal); - check uselussClock or usluss ternm
 
 struct shadowPCB {
     int pid; // if pid =0, proccess is dead
@@ -83,8 +80,7 @@ int curTime;
 /* Declaring helper functions here since we can't update the .h file*/
 struct slot* getStartSlot();
 int getNewId();
- 
-//void diskHander, ternimal hander, syscall hander add these functions
+
 
 void phase2_start_service_processes(void){
     // Called by Phase 1 from init, once processes are running but before the testcase
@@ -128,11 +124,6 @@ void phase2_init(void) {
     // use any other process-specific functions, since the processes are not yet running
 
     /* Mailbox initialization */
-
-    // USLOSS_IntVec[DISK_INTERRUPT_MACRO] = ourDiskHandler (disk Hander)
-    USLOSS_IntVec[USLOSS_CLOCK_INT] = phase2_clockHandler;
-
-
     for (int i = 0; i < MAXMBOX; i++) {
         mailboxes[i].id = -1;
         mailboxes[i].start = NULL;
@@ -545,8 +536,8 @@ void waitDevice(int type, int unit, int *status){
     // message payload, from the interrupt handler) into the out parameter and then
     // return.
 
-    MboxRecv(type, status, sizeof(int));
-    USLOSS_Console("Recieved return code %d\n", *status);
+    MboxRecv(type + unit, status, sizeof(int));
+    //USLOSS_Console("Recieved return code %d\n", *status);
 }
 void wakeupByDevice(int type, int unit, int status){
     //????????
