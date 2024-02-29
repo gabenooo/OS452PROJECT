@@ -12,12 +12,12 @@
 //shadow proccess table
 enum INTERRUPTS {
     CLOCK = 0,
-    TIMER = 1,
-    TERMINAL = 2,
-    SYS_CALL = 3,
-    DISK = 4,
-    MEMORY_MANAGEMENT = 5,
-    ILLEGAL_INSTRUCTION = 6
+    DISK01 = 1,
+    DISK02 = 2,
+    TERM01 = 3,
+    TERM02 = 4,
+    TERM03 = 5,
+    TERM04 = 6
 };
 
 struct shadowPCB {
@@ -122,7 +122,9 @@ void phase2_init(void) {
     // bootstrap, before any processes are running. Use it to initialize any data structures that you plan to use. 
     // You must not attempt to spork() any processes, or
     // use any other process-specific functions, since the processes are not yet running
-
+    USLOSS_IntVec[USLOSS_CLOCK_INT] = phase2_clockHandler; 
+    USLOSS_IntVec[USLOSS_DISK_INT] = //add disk handler
+    USLOSS_IntVec[USLOSS_TERM_INT] = //add term handler
     /* Mailbox initialization */
     for (int i = 0; i < MAXMBOX; i++) {
         mailboxes[i].id = -1;
