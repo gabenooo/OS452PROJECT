@@ -273,7 +273,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     }
 
     /* If we are out of space */
-    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots ) { 
+    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots && mailboxes[mbox_id % MAXMBOX].numSlots != 0) { 
         int QueProcID = getpid();
         shadowProcTable[QueProcID % MAXPROC].blocked = 1;
         shadowProcTable[QueProcID % MAXPROC].pid = QueProcID;
@@ -288,9 +288,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
             cur->pNext = &shadowProcTable[QueProcID % MAXPROC];
         }
         /* Block process until space is available, if mailbox destroyed then return -1 */
-        //USLOSS_Console("Blocking %d\n", mbox_id);
         blockMe(98);
-        //USLOSS_Console("Unblocking %d\n", mbox_id);
         if (mailboxes[mbox_id].id < 0) { return -3; }
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
 
@@ -438,6 +436,7 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
         return -2;
     }
 
+    //USLOSS_Console("ERROR\n");
     /* For non empty mailboxes add the memssage to the queue*/
     if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot->inUse = 1;
