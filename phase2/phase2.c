@@ -123,8 +123,8 @@ void phase2_init(void) {
     // You must not attempt to spork() any processes, or
     // use any other process-specific functions, since the processes are not yet running
     USLOSS_IntVec[USLOSS_CLOCK_INT] = phase2_clockHandler; 
-    USLOSS_IntVec[USLOSS_DISK_INT] = //add disk handler
-    USLOSS_IntVec[USLOSS_TERM_INT] = //add term handler
+    USLOSS_IntVec[USLOSS_DISK_INT] = termInteruptHandler;
+    USLOSS_IntVec[USLOSS_TERM_INT] = diskInteruptHandler;
     /* Mailbox initialization */
     for (int i = 0; i < MAXMBOX; i++) {
         mailboxes[i].id = -1;
@@ -549,16 +549,41 @@ void wakeupByDevice(int type, int unit, int status){
 
 /******************** INTERUPT HANDLERS ********************/
 
+/* Handles interups for terminal */
 void termInteruptHandler(int unit, void* payload) {
 
     int unit = (int)(long)payload;
     int status = 0;
     USLOSS_DeviceInput(USLOSS_TERM_DEV, unit, &status);
-    MboxCondSend(USLOSS_TERM_DEV /* TODO */, &status, sizeof(status));
+
+    int termDev = -1;
+    if (unit == 0) {
+        termDev = TERM01;
+    } else if (unit == 1) {
+        termDev = TERM02;
+    } else if (unit == 2) {
+        termDev = TERM03;
+    } else if (unit == 3) {
+        termDev = TERM04;
+    }
+
+    MboxCondSend(termDev, &status, sizeof(status));
 }
 
+/* Handles interupts for disk */
 void diskInteruptHandler(int unit, void* payload) {
+    int unit = (int)(long)payload;
+    int status = 0;
+    USLOSS_DeviceInput(USLOSS_TERM_DEV, unit, &status);
 
+    int diskDec = -1;
+    if (unit == 0) {
+        diskDec = DISK01;
+    } else if (unit == 1) {
+        diskDec = DISK02;
+    }
+
+    MboxCondSend(diskDec, &status, sizeof(status));
 }
 
 
