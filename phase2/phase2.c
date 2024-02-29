@@ -11,12 +11,13 @@
 
 //shadow proccess table
 enum INTERRUPTS {
-    CLOCK = 1,
-    TIMER = 2,
-    TERMINAL = 3,
-    SYS_CALL = 4,
-    DISK = 5,
-    MEMORY_MANAGEMENT = 6
+    CLOCK = 0,
+    TIMER = 1,
+    TERMINAL = 2,
+    SYS_CALL = 3,
+    DISK = 4,
+    MEMORY_MANAGEMENT = 5,
+    ILLEGAL_INSTRUCTION = 6
 };
 // use define clock is 0, disk 0, 1 , terminal 0,1,2,3 The unit field must be a valid value
 // (0 for clock; 0,1 for disk; 0,1,2,3 for terminal); - check uselussClock or usluss ternm
@@ -76,6 +77,7 @@ static struct slot mailSlots[MAXSLOTS];
 
 int curMailboxID;
 int curSlotID;
+int curTime;
 
 /* Declaring helper functions here since we can't update the .h file*/
 struct slot* getStartSlot();
@@ -96,6 +98,7 @@ void phase2_start_service_processes(void){
     MboxCreate(1, sizeof(int));
     MboxCreate(1, sizeof(int));
     MboxCreate(1, sizeof(int));
+    MboxCreate(1, sizeof(int));
 
 }
 
@@ -103,11 +106,17 @@ void phase2_start_service_processes(void){
 void phase2_clockHandler(void){
     // Called by Phase 1 from the clock interrupt. Use it to implement any logic
     // that you want to run every time that the clock interrupt occurs.
-    
-    if (mailboxes[CLOCK].consumerQueue != NULL) {
-        MboxSend(CLOCK, NULL, 0); // condsend
+    if ( currentTime() - curTime >= 100 && mailboxes[CLOCK].consumerQueue != NULL) {
+        int status;// = currentTime();
+        USLOSS_Console("CALLING device input\n");
+        USLOSS_DeviceInput(USLOSS_CLOCK_DEV, 0, &status);
+        USLOSS_Console("status is %d\n", status);
+        MboxCondSend(CLOCK, &status, sizeof(int));
+        curTime = currentTime();
     }
+    // USLOSS_Console("SENDING\n");
     
+    // USLOSS_Console("SENT\n");
 }
 
 
@@ -144,6 +153,7 @@ void phase2_init(void) {
     }
     curMailboxID = 0;
     curSlotID = 0;
+    curTime = 0;
 
     memset(shadowProcTable, 0, sizeof(shadowProcTable));
 
@@ -420,6 +430,8 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     // of Send() and Recv(), to instead create (private) helper functions, which both
     // the Cond and non-Cond versions of your functions can call. But remember: you
     // must not change the declaration of any function called by the testcases!
+    struct slot* curSlot;
+
     if (msg_size > MAX_MESSAGE) {
         USLOSS_Console("ERROR Message size too big %d. Max is %d\n", msg_size, MAX_MESSAGE);
         return -1;
@@ -428,42 +440,53 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
         return -1;
     }
 
-    struct slot* curSlot = getStartSlot();
-
-    if (curSlot == NULL) {
-        return -2;
+    if (!mailboxes[mbox_id].numSlots <= 0) {
+        curSlot = getStartSlot();
+        if (curSlot == NULL) {
+            return -2;
+        }
     }
+
+    USLOSS_Console("sending\n");
 
     /* If we are out of space */
     if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse > mailboxes[mbox_id % MAXMBOX].numSlots ) { 
         return -2;
     }
 
-    curSlot->inUse = 1;
-    strcpy(curSlot->mailSlot, msg_ptr);
-    curSlot->slotSize = msg_size;
+    /* For non empty mailboxes add the memssage to the queue*/
+    if (!mailboxes[mbox_id].numSlots <= 0) {
+        curSlot->inUse = 1;
+        strcpy(curSlot->mailSlot, msg_ptr);
+        curSlot->slotSize = msg_size;
 
-    /* Adds the message to the message queue */
-    if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
-        mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
-    } else {
-        struct slot* next = mailboxes[mbox_id % MAXMBOX].slotsQueue;
-        while (next->nextSlot != NULL) {
-            next = next->nextSlot;
+        /* Adds the message to the message queue */
+        if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
+            mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
+        } else {
+            struct slot* next = mailboxes[mbox_id % MAXMBOX].slotsQueue;
+            while (next->nextSlot != NULL) {
+                next = next->nextSlot;
+            }
+            next->nextSlot = curSlot;
         }
-        next->nextSlot = curSlot;
+        mailboxes[mbox_id % MAXMBOX].numSlotsInUse++;
     }
-    mailboxes[mbox_id % MAXMBOX].numSlotsInUse++;
+    
     
 
     /* If the consumer is waiting, unblock them and remove them from the consumer queue */
+    ConsumerQueue:
     if (mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
+        
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
         int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
-
         unblockProc(pid);
-    } 
+
+    } else if (mailboxes[mbox_id].numSlots <= 0) {
+        return -2;
+    }
     return 0;
 }
 
@@ -521,12 +544,8 @@ void waitDevice(int type, int unit, int *status){
     // message payload, from the interrupt handler) into the out parameter and then
     // return.
 
-    
-    // if type is mailbox and unit :
-        //recevie
-    int returnCode = MboxRecv(type, NULL, 0);
-    status = &returnCode;
-    //
+    MboxRecv(type, status, sizeof(int));
+    USLOSS_Console("Recieved return code %d\n", *status);
 }
 void wakeupByDevice(int type, int unit, int status){
     //????????
@@ -538,7 +557,7 @@ void wakeupByDevice(int type, int unit, int status){
 /* Gets an empty mailbox ID, returns -1 if full */
 int getNewId() {
     // return.getStartSlot
-    for (int i = curMailboxID + 1; i < MAXMBOX; i++) {
+    for (int i = curMailboxID; i < MAXMBOX; i++) {
         if (mailboxes[i].id == -1) {
             curMailboxID = i;
             return i;
