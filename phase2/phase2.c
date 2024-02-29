@@ -18,6 +18,8 @@ enum INTERRUPTS {
     DISK = 5,
     MEMORY_MANAGEMENT = 6
 };
+// use define clock is 0, disk 0, 1 , terminal 0,1,2,3 The unit field must be a valid value
+// (0 for clock; 0,1 for disk; 0,1,2,3 for terminal); - check uselussClock or usluss ternm
 
 struct shadowPCB {
     int pid; // if pid =0, proccess is dead
@@ -78,7 +80,8 @@ int curSlotID;
 /* Declaring helper functions here since we can't update the .h file*/
 struct slot* getStartSlot();
 int getNewId();
-
+ 
+//void diskHander, ternimal hander, syscall hander add these functions
 
 void phase2_start_service_processes(void){
     // Called by Phase 1 from init, once processes are running but before the testcase
@@ -100,8 +103,9 @@ void phase2_start_service_processes(void){
 void phase2_clockHandler(void){
     // Called by Phase 1 from the clock interrupt. Use it to implement any logic
     // that you want to run every time that the clock interrupt occurs.
+    
     if (mailboxes[CLOCK].consumerQueue != NULL) {
-        MboxSend(CLOCK, NULL, 0);
+        MboxSend(CLOCK, NULL, 0); // condsend
     }
     
 }
@@ -114,6 +118,9 @@ void phase2_init(void) {
     // use any other process-specific functions, since the processes are not yet running
 
     /* Mailbox initialization */
+
+    // USLOSS_IntVec[DISK_INTERRUPT_MACRO] = ourDiskHandler (disk Hander)
+
     for (int i = 0; i < MAXMBOX; i++) {
         mailboxes[i].id = -1;
         mailboxes[i].start = NULL;
@@ -514,8 +521,12 @@ void waitDevice(int type, int unit, int *status){
     // message payload, from the interrupt handler) into the out parameter and then
     // return.
 
+    
+    // if type is mailbox and unit :
+        //recevie
     int returnCode = MboxRecv(type, NULL, 0);
     status = &returnCode;
+    //
 }
 void wakeupByDevice(int type, int unit, int status){
     //????????
