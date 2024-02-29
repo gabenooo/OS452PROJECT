@@ -66,6 +66,7 @@ struct mailbox {
 
 struct slot{
     int inUse;
+    int msgSize;
     char mailSlot[MAX_MESSAGE];
     struct slot * nextSlot;
 };
@@ -145,6 +146,7 @@ void phase2_init(void) {
     for ( int i = 0; i < MAXSLOTS; i++) {    
 
         mailSlots[i].inUse = 0;
+        mailSlots[i].msgSize = 0;
         for ( int j = 0; j < MAX_MESSAGE; j++) {
             mailSlots[i].mailSlot[j] = 0;
         }
@@ -305,6 +307,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     /* For non empty mailboxes add the memssage to the queue*/
     if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot->inUse = 1;
+        curSlot->msgSize = msg_size;
         strcpy(curSlot->mailSlot, msg_ptr);
 
         /* Adds the message to the message queue */
@@ -346,6 +349,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // the ordering rules we discussed earlier in the spec). Otherwise it will block until
     // a message is available. (But note the special rules for zero-slot mailboxes, see
     // above.)
+    int msgSize = 0;
     
     // todo: error checking (RETURN -1)
     if (mbox_id < 0 || mbox_id > MAXMBOX){
@@ -355,6 +359,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
 
     if (mailboxes[mbox_id].slotsQueue != NULL){
         // a message is waiting so we copy it over
+        msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
         strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
 
         /* Removes message from slot queue */
@@ -365,7 +370,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
         }
 
-        return mailboxes[mbox_id].slotSize;
+        return msgSize;
     } else {
         // queue up proc and block
         
@@ -386,7 +391,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         blockMe(99);
         if (mailboxes[mbox_id].id < 0) { return -3; }
         if (mailboxes[mbox_id].numSlots > 0){
-            
+            msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
             strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
 
             /* Removes message from slot queue */
@@ -396,7 +401,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
                 unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
             }
-            return mailboxes[mbox_id].slotSize; 
+            return msgSize; 
             
         } else {
             return 0;
