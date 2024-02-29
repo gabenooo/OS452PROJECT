@@ -80,6 +80,8 @@ int curTime;
 /* Declaring helper functions here since we can't update the .h file*/
 struct slot* getStartSlot();
 int getNewId();
+void termInteruptHandler(int _, void* payload);
+void diskInteruptHandler(int _, void* payload);
 
 
 void phase2_start_service_processes(void){
@@ -122,7 +124,7 @@ void phase2_init(void) {
     // bootstrap, before any processes are running. Use it to initialize any data structures that you plan to use. 
     // You must not attempt to spork() any processes, or
     // use any other process-specific functions, since the processes are not yet running
-    USLOSS_IntVec[USLOSS_CLOCK_INT] = phase2_clockHandler; 
+    //USLOSS_IntVec[USLOSS_CLOCK_INT] = phase2_clockHandler; 
     USLOSS_IntVec[USLOSS_DISK_INT] = termInteruptHandler;
     USLOSS_IntVec[USLOSS_TERM_INT] = diskInteruptHandler;
     /* Mailbox initialization */
@@ -277,7 +279,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         return -1;
     }
 
-    if (!mailboxes[mbox_id].numSlots <= 0) {
+    if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot = getStartSlot();
         if (curSlot == NULL) {
             return -2;
@@ -307,7 +309,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     }
 
     /* For non empty mailboxes add the memssage to the queue*/
-    if (!mailboxes[mbox_id].numSlots <= 0) {
+    if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot->inUse = 1;
         strcpy(curSlot->mailSlot, msg_ptr);
         curSlot->slotSize = msg_size;
@@ -438,7 +440,7 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
         return -1;
     }
 
-    if (!mailboxes[mbox_id].numSlots <= 0) {
+    if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot = getStartSlot();
         if (curSlot == NULL) {
             return -2;
@@ -451,7 +453,7 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     }
 
     /* For non empty mailboxes add the memssage to the queue*/
-    if (!mailboxes[mbox_id].numSlots <= 0) {
+    if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot->inUse = 1;
         strcpy(curSlot->mailSlot, msg_ptr);
         curSlot->slotSize = msg_size;
@@ -583,7 +585,7 @@ void wakeupByDevice(int type, int unit, int status){
 /******************** INTERUPT HANDLERS ********************/
 
 /* Handles interups for terminal */
-void termInteruptHandler(int unit, void* payload) {
+void termInteruptHandler(int _, void* payload) {
 
     int unit = (int)(long)payload;
     int status = 0;
@@ -604,7 +606,7 @@ void termInteruptHandler(int unit, void* payload) {
 }
 
 /* Handles interupts for disk */
-void diskInteruptHandler(int unit, void* payload) {
+void diskInteruptHandler(int _, void* payload) {
     int unit = (int)(long)payload;
     int status = 0;
     USLOSS_DeviceInput(USLOSS_TERM_DEV, unit, &status);
