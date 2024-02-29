@@ -540,7 +540,40 @@ void waitDevice(int type, int unit, int *status){
     // message payload, from the interrupt handler) into the out parameter and then
     // return.
 
-    MboxRecv(type + unit, status, sizeof(int));
+    if (type == 0){
+        MboxRecv(CLOCK, status, sizeof(int));
+    } else if (type == 1){
+        switch (unit) {
+            case 1:
+                MboxRecv(DISK01, status, sizeof(int));
+                break;
+            case 2:
+                MboxRecv(DISK02, status, sizeof(int));
+                break;
+            default:
+                USLOSS_Halt();
+        }
+    } else if (type == 2){
+        switch (unit) {
+            case 1:
+                MboxRecv(TERM01, status, sizeof(int));
+                break;
+            case 2:
+                MboxRecv(TERM02, status, sizeof(int));
+                break;
+            case 3:
+                MboxRecv(TERM03, status, sizeof(int));
+                break;
+            case 4:
+                MboxRecv(TERM04, status, sizeof(int));
+                break;
+            default:
+                USLOSS_Halt();// throw error halt
+        }
+    } else {
+        USLOSS_Halt();
+    }
+
     //USLOSS_Console("Recieved return code %d\n", *status);
 }
 void wakeupByDevice(int type, int unit, int status){
