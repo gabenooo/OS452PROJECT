@@ -317,7 +317,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     /* If the consumer is waiting, unblock them and remove them from the consumer queue */
     ConsumerQueue:
     if (mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
-        
+
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
         int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
