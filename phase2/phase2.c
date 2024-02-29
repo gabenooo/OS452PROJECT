@@ -103,12 +103,12 @@ void phase2_start_service_processes(void){
 void phase2_clockHandler(void){
     // Called by Phase 1 from the clock interrupt. Use it to implement any logic
     // that you want to run every time that the clock interrupt occurs.
-    if ( currentTime() - curTime >= 100 && mailboxes[CLOCK].consumerQueue != NULL) {
-        int status;// = currentTime();
-        USLOSS_Console("CALLING device input\n");
+    if ( currentTime() - curTime >= 100 ) {// && mailboxes[CLOCK].consumerQueue != NULL) {
+        int status = 0;// = currentTime();
+        //USLOSS_Console("CALLING device input; also cur time is : %d\n", currentTime());
         USLOSS_DeviceInput(USLOSS_CLOCK_DEV, 0, &status);
-        USLOSS_Console("status is %d\n", status);
-        MboxCondSend(CLOCK, &status, sizeof(int));
+        //USLOSS_Console("status is %d\n", status);
+        MboxCondSend(CLOCK, &status, sizeof(status));
         curTime = currentTime();
     }
     // USLOSS_Console("SENDING\n");
@@ -441,8 +441,6 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
         }
     }
 
-    USLOSS_Console("sending\n");
-
     /* If we are out of space */
     if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse > mailboxes[mbox_id % MAXMBOX].numSlots ) { 
         return -2;
@@ -538,8 +536,8 @@ void waitDevice(int type, int unit, int *status){
     // message payload, from the interrupt handler) into the out parameter and then
     // return.
 
-    MboxRecv(type, status, sizeof(int));
-    USLOSS_Console("Recieved return code %d\n", *status);
+    MboxRecv(type + unit, status, sizeof(int));
+    //USLOSS_Console("Recieved return code %d\n", *status);
 }
 void wakeupByDevice(int type, int unit, int status){
     //????????
