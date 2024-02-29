@@ -308,7 +308,7 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot->inUse = 1;
         curSlot->msgSize = msg_size;
-        strcpy(curSlot->mailSlot, msg_ptr);
+        if(msg_ptr != NULL) { strcpy(curSlot->mailSlot, msg_ptr); }
 
         /* Adds the message to the message queue */
         if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
@@ -322,8 +322,6 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         }
         mailboxes[mbox_id % MAXMBOX].numSlotsInUse++;
     }
-    
-    
 
     /* If the consumer is waiting, unblock them and remove them from the consumer queue */
     ConsumerQueue:
@@ -360,8 +358,9 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     if (mailboxes[mbox_id].slotsQueue != NULL){
         // a message is waiting so we copy it over
         msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
-        strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
-
+        if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
+            strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+        }
         /* Removes message from slot queue */
         mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
         mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
@@ -392,8 +391,9 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         if (mailboxes[mbox_id].id < 0) { return -3; }
         if (mailboxes[mbox_id].numSlots > 0){
             msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
-            strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
-
+            if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
+                strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+            }
             /* Removes message from slot queue */
             mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
             mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
@@ -449,7 +449,7 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot->inUse = 1;
         curSlot->msgSize = msg_size;
-        strcpy(curSlot->mailSlot, msg_ptr);
+        if (msg_ptr != NULL) { strcpy(curSlot->mailSlot, msg_ptr); }
 
         /* Adds the message to the message queue */
         if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
@@ -504,7 +504,9 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     if (mailboxes[mbox_id].slotsQueue != NULL){
         // a message is waiting so we copy it over
         msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
-        strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+        if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
+            strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+        }
 
         /* Removes message from slot queue */
         mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
