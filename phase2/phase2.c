@@ -4,7 +4,8 @@
 #include <string.h>
 #include <phase1.h>
 
-
+# define USLOSS_CLOCK_MACRO 0
+# define USLOSS_CLOCK_MACRO 1
 //systemCallVec;
 
 //slots with size MAX_MESSAGE
@@ -106,8 +107,11 @@ void phase2_start_service_processes(void){
 void phase2_clockHandler(void){
     // Called by Phase 1 from the clock interrupt. Use it to implement any logic
     // that you want to run every time that the clock interrupt occurs.
-    if ( currentTime() - curTime >= 100 && mailboxes[CLOCK].consumerQueue != NULL) {
-        int status;// = currentTime();
+    if (curTime == NULL){
+        curTime == 0;
+    }
+    if (currentTime() - curTime >= 100 && mailboxes[CLOCK].consumerQueue != NULL) {
+        int status;//= currentTime();
         USLOSS_Console("CALLING device input\n");
         USLOSS_DeviceInput(USLOSS_CLOCK_DEV, 0, &status);
         USLOSS_Console("status is %d\n", status);
@@ -129,6 +133,8 @@ void phase2_init(void) {
     /* Mailbox initialization */
 
     // USLOSS_IntVec[DISK_INTERRUPT_MACRO] = ourDiskHandler (disk Hander)
+    USLOSS_IntVec[USLOSS_CLOCK_INT] = phase2_clockHandler;
+
 
     for (int i = 0; i < MAXMBOX; i++) {
         mailboxes[i].id = -1;
@@ -543,9 +549,11 @@ void waitDevice(int type, int unit, int *status){
     // message arrives, it will store the status (remember, the status was sent, as the
     // message payload, from the interrupt handler) into the out parameter and then
     // return.
-
-    MboxRecv(type, status, sizeof(int));
-    USLOSS_Console("Recieved return code %d\n", *status);
+    if (type == 0){
+        MboxRecv(type, status, sizeof(int));
+        USLOSS_Console("Recieved return code %d\n", *status);
+    }
+    
 }
 void wakeupByDevice(int type, int unit, int status){
     //????????
