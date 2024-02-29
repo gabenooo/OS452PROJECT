@@ -422,10 +422,7 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     // must not change the declaration of any function called by the testcases!
     struct slot* curSlot;
 
-    if (mailboxes[mbox_id].id < 0) {
-        return -1;
-    }
-    if (msg_size > mailboxes[mbox_id].slotSize) {
+    if (mailboxes[mbox_id].id < 0 || msg_size > mailboxes[mbox_id].slotSize) {
         return -1;
     }
 
@@ -437,7 +434,7 @@ int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     }
 
     /* If we are out of space */
-    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse > mailboxes[mbox_id % MAXMBOX].numSlots ) { 
+    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots ) { 
         return -2;
     }
 
