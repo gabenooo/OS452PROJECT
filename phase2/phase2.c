@@ -123,7 +123,7 @@ void phase2_clockHandler(void){
 
 void syscallHandler(arg){
     if (arg == 0){
-        USLOSS_Halt(1);
+        systemCallVec[0]();
     }
 }
 
