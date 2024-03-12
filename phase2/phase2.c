@@ -119,6 +119,11 @@ void phase2_clockHandler(void){
     // USLOSS_Console("SENT\n");
 }
 
+void syscallHandler(arg){
+    if (arg == 0){
+        USLOSS_Halt(1);
+    }
+}
 
 void phase2_init(void) {
     // Very similar to phase1_init(), this function is called by the testcase during
@@ -128,6 +133,7 @@ void phase2_init(void) {
     //USLOSS_IntVec[USLOSS_CLOCK_INT] = phase2_clockHandler; 
     USLOSS_IntVec[USLOSS_DISK_INT] = diskInteruptHandler;
     USLOSS_IntVec[USLOSS_TERM_INT] = termInteruptHandler;
+    USLOSS_IntVec[USLOSS_SYSCALL_INT] = syscallHandler;
     /* Mailbox initialization */
     for (int i = 0; i < MAXMBOX; i++) {
         mailboxes[i].id = -1;
