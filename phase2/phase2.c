@@ -121,9 +121,9 @@ void phase2_clockHandler(void){
     // USLOSS_Console("SENT\n");
 }
 
-void syscallHandler(arg){
-    if (arg == 0){
-        systemCallVec[0]();
+void syscallHandler(USLOSS_Sysargs arg){
+    if (arg.number == 0){
+        systemCallVec[0](&arg);
     }
 }
 
@@ -173,7 +173,8 @@ void phase2_init(void) {
 
 }
 
-void nullsys() {
+void nullsys(USLOSS_Sysargs *args) {
+    USLOSS_Console("nullsys(): Program called an unimplemented syscall.  syscall no: %d   PSR: 0x%02x\n", args->number, USLOSS_PsrGet());
     USLOSS_Halt(1);
 }
 
