@@ -123,8 +123,13 @@ void phase2_clockHandler(void){
 
 void syscallHandler(int _, void *arg){
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
-    USLOSS_Console("arg number is %d\n", args->number);
-    systemCallVec[args->number](arg);
+    if (args->number >= MAXSYSCALLS || args->number < 0){
+        USLOSS_Console("syscallHandler(): Invalid syscall number %d\n", args->number);
+        USLOSS_Halt(1);
+    } else {
+        systemCallVec[args->number](arg);
+    }
+    
 }
 
 void phase2_init(void) {
