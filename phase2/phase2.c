@@ -360,7 +360,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     int msgSize = 0;
     
     // todo: error checking (RETURN -1)
-    if (mbox_id < 0 || mbox_id > MAXMBOX){
+    if (mbox_id < 0 || mbox_id > MAXMBOX || mailboxes[mbox_id].id < 0){
         return -1;
     } // then check buffer len
 
@@ -373,7 +373,6 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     }
 
     if (mailboxes[mbox_id].slotsQueue != NULL){
-        //USLOSS_Console("slots queue is not null\n");
         // a message is waiting so we copy it over
         msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
         if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
