@@ -174,11 +174,10 @@ int MboxCreate(int slots, int slot_size){
     // set up the mail box
     mailboxes[newId].id = newId;
     mailboxes[newId].slotSize = slot_size;
-
-   
     mailboxes[newId].start = NULL;
     mailboxes[newId].numSlotsInUse = 0;
-    
+    mailboxes[newId].consumerQueue = NULL;
+    mailboxes[newId].producerQueue = NULL;
     mailboxes[newId].end = mailboxes[newId].start;
     mailboxes[newId].numSlots = slots;
 
@@ -261,25 +260,34 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         }
     }
 
-    if ( mailboxes[mbox_id % MAXMBOX].numSlotsInUse > mailboxes[mbox_id % MAXMBOX].numSlots && mailboxes[mbox_id % MAXMBOX].numSlots != 0) {
+    USLOSS_Console("Mailbox is %d and numSlots in use is %d and number of slots is %d\n", mbox_id, mailboxes[mbox_id % MAXMBOX].numSlotsInUse, mailboxes[mbox_id % MAXMBOX].numSlots);
+
+    if ( mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots || mailboxes[mbox_id % MAXMBOX].numSlots == 0) {
         int QueProcID = getpid();
         shadowProcTable[QueProcID % MAXPROC].blocked = 1;
         shadowProcTable[QueProcID % MAXPROC].pid = QueProcID;
 
         struct shadowPCB* cur = mailboxes[mbox_id].producerQueue;
-        if (cur == NULL){
-            mailboxes[mbox_id].producerQueue = &shadowProcTable[QueProcID % MAXPROC];
-        } else {
-            while (cur->pNext != NULL){
-                cur = cur->pNext;
-            }
-            cur->pNext = &shadowProcTable[QueProcID % MAXPROC];
-        }
-        /* Block process until space is available, if mailbox destroyed then return -3 */
+        
+        /* Block process until space is available, if mailbox destroyed then return -2 */
         if ( is_conditional == 1 ) {
             return -2;
         } else {
+            if (cur == NULL){
+                //USLOSS_Console("should be null\n");
+                mailboxes[mbox_id].producerQueue = &shadowProcTable[QueProcID % MAXPROC];
+            } else {
+                
+                while (cur->pNext != NULL){
+                    //USLOSS_Console("%d\n", cur->pid);
+                    cur = cur->pNext;
+                }
+                cur->pNext = &shadowProcTable[QueProcID % MAXPROC];
+            }
+            //USLOSS_Console("BLOCKING ME %d %d %d\n", QueProcID, shadowProcTable[QueProcID].pid, mailboxes[mbox_id].producerQueue->pid);
             blockMe(98);
+            //USLOSS_Console("UNBLOCKING ME \n");
+
         }
         if (mailboxes[mbox_id].id < 0) { return -3; }
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
@@ -358,6 +366,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
         /* Removes a producer if present from the producer queue */
         if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
+            //USLOSS_Console("UNBLOCKING %d\n", mailboxes[mbox_id % MAXMBOX].producerQueue->pid);
             unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
         }
 
