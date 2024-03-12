@@ -398,7 +398,6 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             if (mailboxes[mbox_id].slotsQueue->msgSize > msg_max_size) {
                 return -1;
             }
-
             strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
         }
         /* Removes message from slot queue */
@@ -437,6 +436,9 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         if (mailboxes[mbox_id].numSlots > 0){
             msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
             if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
+                if (mailboxes[mbox_id].slotsQueue->msgSize > msg_max_size) {
+                return -1;
+                }
                 strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
             }
             /* Removes message from slot queue */
