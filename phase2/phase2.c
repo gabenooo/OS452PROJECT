@@ -174,11 +174,10 @@ int MboxCreate(int slots, int slot_size){
     // set up the mail box
     mailboxes[newId].id = newId;
     mailboxes[newId].slotSize = slot_size;
-
-   
     mailboxes[newId].start = NULL;
     mailboxes[newId].numSlotsInUse = 0;
-    
+    mailboxes[newId].consumerQueue = NULL;
+    mailboxes[newId].producerQueue = NULL;
     mailboxes[newId].end = mailboxes[newId].start;
     mailboxes[newId].numSlots = slots;
 
@@ -246,22 +245,11 @@ int MboxRelease(int mbox_id){
     return 0;
 }
 
-
-// returns 0 if successful, -1 if invalid args
-int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
-    // Sends a message through a mailbox. If the message is delivered directly to a
-    // consumer or queued up in a mail slot, then this function will not block (although
-    // it might context switch, even then, if it wakes up a higher-priority process).
-    // If there are no consumers queued and no space available to queue a message,
-    // then this process will block until the message can be delivered - either to a
-    // consumer, or into a mail slot.
+int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional) {
     struct slot* curSlot;
 
-    
-    if (mailboxes[mbox_id].id < 0) {
-        return -1;
-    }
-    if (msg_size > mailboxes[mbox_id].slotSize) {
+    /* Error checking */
+    if (mailboxes[mbox_id].id < 0 || msg_size > mailboxes[mbox_id].slotSize) {
         return -1;
     }
 
@@ -272,8 +260,14 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         }
     }
 
-    /* If we are out of space */
-    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots && mailboxes[mbox_id % MAXMBOX].numSlots != 0) { 
+    //USLOSS_Console("Mailbox is %d and numSlots in use is %d and number of slots is %d\n", mbox_id, mailboxes[mbox_id % MAXMBOX].numSlotsInUse, mailboxes[mbox_id % MAXMBOX].numSlots);
+    //USLOSS_Console("Mailbox is %d and consumer queue ID is %p\n", mbox_id, mailboxes[mbox_id % MAXMBOX].consumerQueue);
+
+    if (mailboxes[mbox_id % MAXMBOX].numSlots == 0 && mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
+        goto ConsumerQueue;
+    }
+
+    if ( (mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots) ) {
         int QueProcID = getpid();
         shadowProcTable[QueProcID % MAXPROC].blocked = 1;
         shadowProcTable[QueProcID % MAXPROC].pid = QueProcID;
@@ -302,10 +296,11 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
         }
         if (mailboxes[mbox_id].id < 0) { return -1; }
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
+        if (mailboxes[mbox_id].numSlots <= 0 ) { return 0; }
     }
 
     /* For non empty mailboxes add the memssage to the queue*/
-    if (!(mailboxes[mbox_id].numSlots <= 0)) {
+    if (mailboxes[mbox_id].numSlots > 0) {
         curSlot->inUse = 1;
         curSlot->msgSize = msg_size;
         if(msg_ptr != NULL) { strcpy(curSlot->mailSlot, msg_ptr); }
@@ -325,23 +320,30 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
 
     /* If the consumer is waiting, unblock them and remove them from the consumer queue */
     ConsumerQueue:
-    if (mailboxes[mbox_id].id < 0) { return -3; }
     if (mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
-
+        
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
         int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
         unblockProc(pid);
 
     } else if (mailboxes[mbox_id].numSlots <= 0) {
-        //USLOSS_Console("Blocking %d\n", mbox_id);
-        blockMe(98);
-        //USLOSS_Console("Unblocking %d\n", mbox_id);
-        
+        if ( is_conditional == 1 ) {
+            return -2;
+        } else {
+            blockMe(98);
+        }
         goto ConsumerQueue;
     }
 
     return 0;
+
+
+}
+
+// returns 0 if successful, -1 if invalid args
+int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
+    return MboxSendHelper(mbox_id, msg_ptr, msg_size, 0);
 }
 
 
@@ -379,6 +381,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
         /* Removes a producer if present from the producer queue */
         if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
+            //USLOSS_Console("UNBLOCKING %d\n", mailboxes[mbox_id % MAXMBOX].producerQueue->pid);
             unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
         }
 
@@ -430,69 +433,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
 
 // returns 0 if successful, 1 if mailbox full, -1 if illegal args
 int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
-    // These functions work exactly like their non-Cond versions, except that they
-    // refuse to block. If, at any point, they would normally have to block, they will
-    // return -2 instead.
-    // While these functions will never block, they might context switch, if they
-    // wake up a process that was higher priority than the one on which the interrupt
-    // handler is running. This is not a problem.
-    // Note that you may find it useful, instead of implementing two different copies
-    // of Send() and Recv(), to instead create (private) helper functions, which both
-    // the Cond and non-Cond versions of your functions can call. But remember: you
-    // must not change the declaration of any function called by the testcases!
-    struct slot* curSlot;
-
-    if (mailboxes[mbox_id].id < 0 || msg_size > mailboxes[mbox_id].slotSize) {
-        return -1;
-    }
-
-    if (!(mailboxes[mbox_id].numSlots <= 0)) {
-        curSlot = getStartSlot();
-        if (curSlot == NULL) {
-            return -2;
-        }
-    }
-
-    /* If we are out of space */
-    if (mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots ) { 
-        return -2;
-    }
-
-    //USLOSS_Console("ERROR\n");
-    /* For non empty mailboxes add the memssage to the queue*/
-    if (!(mailboxes[mbox_id].numSlots <= 0)) {
-        curSlot->inUse = 1;
-        curSlot->msgSize = msg_size;
-        if (msg_ptr != NULL) { strcpy(curSlot->mailSlot, msg_ptr); }
-
-        /* Adds the message to the message queue */
-        if (mailboxes[mbox_id % MAXMBOX].slotsQueue == NULL) {
-            mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
-        } else {
-            struct slot* next = mailboxes[mbox_id % MAXMBOX].slotsQueue;
-            while (next->nextSlot != NULL) {
-                next = next->nextSlot;
-            }
-            next->nextSlot = curSlot;
-        }
-        mailboxes[mbox_id % MAXMBOX].numSlotsInUse++;
-    }
-    
-    
-
-    /* If the consumer is waiting, unblock them and remove them from the consumer queue */
-    ConsumerQueue:
-    if (mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
-        
-        mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
-        int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
-        mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
-        unblockProc(pid);
-
-    } else if (mailboxes[mbox_id].numSlots <= 0) {
-        return -2;
-    }
-    return 0;
+    return MboxSendHelper(mbox_id, msg_ptr, msg_size, 1);
 }
 
 
