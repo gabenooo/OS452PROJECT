@@ -121,10 +121,10 @@ void phase2_clockHandler(void){
     // USLOSS_Console("SENT\n");
 }
 
-void syscallHandler(USLOSS_Sysargs arg){
-    if (arg.number == 0){
-        systemCallVec[0](&arg);
-    }
+void syscallHandler(int _, void *arg){
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+    USLOSS_Console("arg number is %d\n", args->number);
+    systemCallVec[args->number](arg);
 }
 
 void phase2_init(void) {
