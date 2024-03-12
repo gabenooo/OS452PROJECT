@@ -294,7 +294,7 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
             //USLOSS_Console("UNBLOCKING ME \n");
 
         }
-        if (mailboxes[mbox_id].id < 0) { return -3; }
+        if (mailboxes[mbox_id].id < 0) { return -1; }
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
     }
 
@@ -360,7 +360,15 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     } // then check buffer len
 
 
+
+    if (mailboxes[mbox_id].numSlots == 0 && mailboxes[mbox_id].producerQueue != NULL) {
+        
+        unblockProc(mailboxes[mbox_id].producerQueue->pid);
+        return 0;
+    }
+
     if (mailboxes[mbox_id].slotsQueue != NULL){
+        //USLOSS_Console("slots queue is not null\n");
         // a message is waiting so we copy it over
         msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
         if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
@@ -394,7 +402,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         }
 
         blockMe(99);
-        if (mailboxes[mbox_id].id < 0) { return -3; }
+        if (mailboxes[mbox_id].id < 0) { return -1; }
         if (mailboxes[mbox_id].numSlots > 0){
             msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
             if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
@@ -405,6 +413,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
             /* Removes a producer if present from the producer queue */
             if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
+                USLOSS_Console("UNBLOCKING %d\n", mailboxes[mbox_id % MAXMBOX].producerQueue->pid);
                 unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
             }
             return msgSize; 
@@ -460,7 +469,7 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
 
         return msgSize;
     } else {
-        return -2;
+        return -1;
     }
     return 0;
 }
