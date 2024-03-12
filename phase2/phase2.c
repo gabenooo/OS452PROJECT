@@ -296,6 +296,7 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         }
         if (mailboxes[mbox_id].id < 0) { return -1; }
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
+        if (mailboxes[mbox_id].numSlots <= 0 ) { return 0; }
     }
 
     /* For non empty mailboxes add the memssage to the queue*/
@@ -334,6 +335,7 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         }
         goto ConsumerQueue;
     }
+
     return 0;
 
 
@@ -400,8 +402,10 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             }
             cur->cNext = &shadowProcTable[QueProcID % MAXPROC];
         }
-
+        USLOSS_Console("blocking me\n");
         blockMe(99);
+        USLOSS_Console("unblocking me\n");
+
         if (mailboxes[mbox_id].id < 0) { return -1; }
         if (mailboxes[mbox_id].numSlots > 0){
             msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
