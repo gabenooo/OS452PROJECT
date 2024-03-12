@@ -260,9 +260,14 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         }
     }
 
-    USLOSS_Console("Mailbox is %d and numSlots in use is %d and number of slots is %d\n", mbox_id, mailboxes[mbox_id % MAXMBOX].numSlotsInUse, mailboxes[mbox_id % MAXMBOX].numSlots);
+    //USLOSS_Console("Mailbox is %d and numSlots in use is %d and number of slots is %d\n", mbox_id, mailboxes[mbox_id % MAXMBOX].numSlotsInUse, mailboxes[mbox_id % MAXMBOX].numSlots);
+    //USLOSS_Console("Mailbox is %d and consumer queue ID is %p\n", mbox_id, mailboxes[mbox_id % MAXMBOX].consumerQueue);
 
-    if ( mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots || mailboxes[mbox_id % MAXMBOX].numSlots == 0) {
+    if (mailboxes[mbox_id % MAXMBOX].numSlots == 0 && mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
+        goto ConsumerQueue;
+    }
+
+    if ( (mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots) ) {
         int QueProcID = getpid();
         shadowProcTable[QueProcID % MAXPROC].blocked = 1;
         shadowProcTable[QueProcID % MAXPROC].pid = QueProcID;
