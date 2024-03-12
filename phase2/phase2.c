@@ -331,7 +331,10 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         if ( is_conditional == 1 ) {
             return -2;
         } else {
+            //mUSLOSS_Console("blocking\n");
             blockMe(98);
+            //USLOSS_Console("UNBLOCKING\n");
+
         }
         goto ConsumerQueue;
     }
@@ -381,8 +384,12 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
         /* Removes a producer if present from the producer queue */
         if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
-            //USLOSS_Console("UNBLOCKING %d\n", mailboxes[mbox_id % MAXMBOX].producerQueue->pid);
-            unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
+            //USLOSS_Console("cur proc is %d, UNBLOCKING %d\n", getpid(), mailboxes[mbox_id % MAXMBOX].producerQueue->pid);
+            if (shadowProcTable[mailboxes[mbox_id % MAXMBOX].producerQueue->pid].blocked == 1) {
+                shadowProcTable[mailboxes[mbox_id % MAXMBOX].producerQueue->pid].blocked = 0;
+                unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);  
+            }
+               
         }
 
         return msgSize;
@@ -402,9 +409,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             }
             cur->cNext = &shadowProcTable[QueProcID % MAXPROC];
         }
-        USLOSS_Console("blocking me\n");
         blockMe(99);
-        USLOSS_Console("unblocking me\n");
 
         if (mailboxes[mbox_id].id < 0) { return -1; }
         if (mailboxes[mbox_id].numSlots > 0){
@@ -417,8 +422,10 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
             /* Removes a producer if present from the producer queue */
             if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
-                USLOSS_Console("UNBLOCKING %d\n", mailboxes[mbox_id % MAXMBOX].producerQueue->pid);
-                unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
+                if (shadowProcTable[mailboxes[mbox_id % MAXMBOX].producerQueue->pid].blocked == 1) {
+                    shadowProcTable[mailboxes[mbox_id % MAXMBOX].producerQueue->pid].blocked = 0;
+                    unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);  
+                }    
             }
             return msgSize; 
             
