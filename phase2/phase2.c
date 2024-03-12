@@ -582,7 +582,7 @@ void diskInteruptHandler(int _, void* payload) {
 /* Gets an empty mailbox ID, returns -1 if full */
 int getNewId() {
     // return.getStartSlot
-    for (int i = curMailboxID; i < MAXMBOX; i++) {
+    for (int i = 0; i < MAXMBOX; i++) {
         if (mailboxes[i].id == -1) {
             curMailboxID = i;
             return i;
