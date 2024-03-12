@@ -74,6 +74,8 @@ struct slot{
 static struct mailbox mailboxes[MAXMBOX];
 static struct slot mailSlots[MAXSLOTS];
 
+void (*systemCallVec[MAXSYSCALLS])(USLOSS_Sysargs *args);
+
 int curMailboxID;
 int curSlotID;
 int curTime;
@@ -83,6 +85,7 @@ struct slot* getStartSlot();
 int getNewId();
 void termInteruptHandler(int _, void* payload);
 void diskInteruptHandler(int _, void* payload);
+void nullsys();
 
 
 void phase2_start_service_processes(void){
@@ -101,7 +104,6 @@ void phase2_start_service_processes(void){
     MboxCreate(1, sizeof(int));
 
 }
-
 
 void phase2_clockHandler(void){
     // Called by Phase 1 from the clock interrupt. Use it to implement any logic
@@ -158,6 +160,15 @@ void phase2_init(void) {
 
     memset(shadowProcTable, 0, sizeof(shadowProcTable));
 
+    /* Set sysVec */
+    for ( int i = 0; i < MAXSYSCALLS; i++ ) {
+        systemCallVec[i] = &nullsys;
+    }
+
+}
+
+void nullsys() {
+    USLOSS_Halt(1);
 }
 
 
@@ -591,7 +602,7 @@ int getNewId() {
     return -1;
 }
 
-extern void (*systemCallVec[])(USLOSS_Sysargs *args);
+
 
 /* Returns the index of the start slot for the series of slots requested */
 struct slot* getStartSlot() {
