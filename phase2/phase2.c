@@ -187,6 +187,9 @@ void nullsys(USLOSS_Sysargs *args) {
 // returns id of mailbox, or -1 if no more mailboxes, or -1 if invalid args
 int MboxCreate(int slots, int slot_size){
     // slots is number of slots, slot_size is the message length for each slot?
+    if (slots > MAXSLOTS) {
+        return -1;
+    }
 
     // first error check
     if ( (slots < 0|| slot_size < 0) || (slot_size > MAX_MESSAGE)) return -1;
