@@ -5,7 +5,7 @@
 #include <phase1.h>
 /*
  * File: phase2.c
- * Authors: Kyle, Gabe Noriega
+ * Authors: Kyle Elison, Gabe Noriega
  * Class: CSC 452 Russ Lewis
  *
  * Purpose: the purpose of this code is to simulate the mailbox system that allows
