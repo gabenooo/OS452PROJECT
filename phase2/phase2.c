@@ -639,19 +639,17 @@ void waitDevice(int type, int unit, int *status){
     }
 }
 
-void wakeupByDevice(int type, int unit, int status){
-    //????????
-}
 
 /******************** INTERUPT HANDLERS ********************/
 
 /* Handles interups for terminal */
 void termInteruptHandler(int _, void* payload) {
-    
-
+    /* Unpacks the initial data */
     int unit = (int)(long)payload;
     int status = 0;
     USLOSS_DeviceInput(USLOSS_TERM_DEV, unit, &status);
+
+    /* Determines which interupt handler is needed */
     int termDev = -1;
     if (unit == 0) {
         termDev = TERM01;
@@ -668,10 +666,12 @@ void termInteruptHandler(int _, void* payload) {
 
 /* Handles interupts for disk */
 void diskInteruptHandler(int _, void* payload) {
+    /* Unpacks the initial data */
     int unit = (int)(long)payload;
     int status = 0;
     USLOSS_DeviceInput(USLOSS_TERM_DEV, unit, &status);
 
+    /* Determines which interupt handler is needed */
     int diskDec = -1;
     if (unit == 0) {
         diskDec = DISK01;
@@ -687,14 +687,13 @@ void diskInteruptHandler(int _, void* payload) {
 
 /* Gets an empty mailbox ID, returns -1 if full */
 int getNewId() {
-    // return.getStartSlot
+    /* Searches each mailbox for one not in use */
     for (int i = 0; i < MAXMBOX; i++) {
         if (mailboxes[i].id == -1) {
             curMailboxID = i;
             return i;
         }
     }
-
     return -1;
 }
 
@@ -703,6 +702,7 @@ int getNewId() {
 /* Returns the index of the start slot for the series of slots requested */
 struct slot* getStartSlot() {
     
+    /* Searches each slot */
     for ( int i = curSlotID + 1; i < MAXSLOTS + curSlotID + 1; i++ ) {
         if ( mailSlots[i % MAXSLOTS].inUse == 0 ) {
             curSlotID = i % MAXSLOTS;
