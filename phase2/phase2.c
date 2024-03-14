@@ -445,8 +445,6 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
 
 
 
-
-
     if (mailboxes[mbox_id].numSlots == 0 && mailboxes[mbox_id].producerQueue != NULL) {
         
         unblockProc(mailboxes[mbox_id].producerQueue->pid);
@@ -503,7 +501,10 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
 
  
         msgSize = shadowProcTable[getpid() % MAXPROC].slotToRead->msgSize;
-        strcpy(msg_ptr, shadowProcTable[getpid() % MAXPROC].slotToRead->mailSlot);
+        if (shadowProcTable[getpid() % MAXPROC].slotToRead->msgSize > 0) {
+            strcpy(msg_ptr, shadowProcTable[getpid() % MAXPROC].slotToRead->mailSlot);
+        }
+        
 
         /* Removes message from slot queue */
         shadowProcTable[getpid() % MAXPROC].slotToRead = NULL;
@@ -582,7 +583,7 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
 
         return msgSize;
     } else {
-        return -1;
+        return -2;
     }
     return 0;
 }
