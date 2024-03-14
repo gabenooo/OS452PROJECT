@@ -460,7 +460,10 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             if (mailboxes[mbox_id].slotsQueue->msgSize > msg_max_size) {
                 return -1;
             }
-            strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+            if (msg_ptr != NULL){
+                strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
+            }
+            
         }
         /* Removes message from slot queue */
         mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
