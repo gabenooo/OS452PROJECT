@@ -549,7 +549,7 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     // must not change the declaration of any function called by the testcases!
     int msgSize = 0;
     // todo: error checking (RETURN -1)
-    if (mbox_id < 0 || mbox_id > MAXMBOX){
+    if (mailboxes[mbox_id].id < 0 || mbox_id > MAXMBOX){
         return -1;
     } // then check buffer len
 
