@@ -182,10 +182,12 @@ void phase2_clockHandler(void){
 /*
  * Function:  syscallHandler
  * --------------------
- * this function is the function that gets put in the USLOSS_IntVec, and is used to 
+ * this function is the function that gets put in the USLOSS_IntVec, and is used to call
+ * the syscall function
  * 
  * arguments:
- * none
+ * int _ - unused
+ * args - pointer to function args
  * 
  */
 void syscallHandler(int _, void *arg){
@@ -199,12 +201,20 @@ void syscallHandler(int _, void *arg){
     
 }
 
+
+/*
+ * Function:  phase2_init
+ * --------------------
+ * this function is the function is called by the testcase during
+ * bootstrap, before any processes are running. It initializes the data structures used
+ * like USLOSS_IntVec functions get set, the mailbox gets initaized, mail slots get set to all 0, and shadowProcTable gets set to zero as well
+ * systemCallVec gets all set to nullsys, later to be implemented.
+ * 
+ * arguments:
+ * none
+ * 
+ */
 void phase2_init(void) {
-    // Very similar to phase1_init(), this function is called by the testcase during
-    // bootstrap, before any processes are running. Use it to initialize any data structures that you plan to use. 
-    // You must not attempt to spork() any processes, or
-    // use any other process-specific functions, since the processes are not yet running
-    //USLOSS_IntVec[USLOSS_CLOCK_INT] = phase2_clockHandler; 
     USLOSS_IntVec[USLOSS_DISK_INT] = diskInteruptHandler;
     USLOSS_IntVec[USLOSS_TERM_INT] = termInteruptHandler;
     USLOSS_IntVec[USLOSS_SYSCALL_INT] = syscallHandler;
@@ -245,15 +255,35 @@ void phase2_init(void) {
 
 }
 
+/*
+ * Function:  nullsys
+ * --------------------
+ * this function  will simply print out an error message and terminate the simulation.
+ * In later Phases, it will have code that adds handlers for various systemcalls 
+ * 
+ * arguments:
+ * USLOSS_Sysargs *args - the passed in syscall struct
+ * 
+ */
 void nullsys(USLOSS_Sysargs *args) {
     USLOSS_Console("nullsys(): Program called an unimplemented syscall.  syscall no: %d   PSR: 0x%02x\n", args->number, USLOSS_PsrGet());
     USLOSS_Halt(1);
 }
 
-
-// returns id of mailbox, or -1 if no more mailboxes, or -1 if invalid args
+/*
+ * Function:  MboxCreate
+ * --------------------
+ * this function Creates a new mailbox and uses getNewId to assign a new IDs
+ * it has some error checking like if the slots arg is > maxslots, and if there are no new ids
+ * 
+ * arguments:
+ * int slots - the number of slots this mailbox will have
+ * int slot_size - the message length for each slot
+ * 
+ * returns:
+ * int newId - the Id of the newly made mailbox
+ */
 int MboxCreate(int slots, int slot_size){
-    // slots is number of slots, slot_size is the message length for each slot?
     if (slots > MAXSLOTS) {
         return -1;
     }
@@ -278,23 +308,22 @@ int MboxCreate(int slots, int slot_size){
 }
 
 
-// returns 0 if successful, -1 if invalid arg
+/*
+ * Function:  MboxRelease
+ * --------------------
+ * this function destroys a mailbox and frees all slots consumed by the mailbox.
+ * All blocked producers and consumers are unblocked, and return -1.
+ * Once the mailbox has been marked as destroyed, no more processes will be
+ * allowed to block on it. this means any Send() or Recv() on it will return -1.
+ * 
+ * arguments:
+ * int mbox_id - the id of the mailbox we want to destroy
+ * 
+ * returns:
+ *  int - 0 if mailbox was destroyed, or -1 if id is not valud
+ */
+
 int MboxRelease(int mbox_id){
-    // Destroys a mailbox. All slots consumed by the mailbox will be freed. All blocked
-    // producers and consumers will be unblocked, and return -1.
-    // Once the mailbox has been marked as destroyed, no more processes will be
-    // allowed to block on it; any attempt to Send() or Recv() on it will return -1.
-    // You must destroy the mailbox (and wake its blocked processes) promptly
-    // but not necessarily instantly. By “promptly,” I mean that the various blocked
-    // processes should be awoken, removed from any pending queues, etc. as soon
-    // as is practical. However, we do not guarantee that all of these processes will
-    // be awake when this function returns - and as such, it might not be possible to
-    // re-create the mailbox immediately after this function returns.
-    // Why might this happen? It depends on the mailbox implementation. In
-    // your implementation, this might not be a problem - but in my implementation,
-    // only one producer, and one consumer, can be waking up at a time - meaning
-    // that it takes a while to “flush” any blocked producers and consumers from the
-    // various queues.
 
     if (mailboxes[mbox_id].id < 0) {
         return -1;
@@ -455,16 +484,25 @@ int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
 }
 
 
-// returns size of received msg if successful, -1 if invalid args
+
+/*
+ * Function:  MboxRecv
+ * --------------------
+ * this function waits to receive a message through a mailbox. If there is a message already
+ * queued in a mail slot, it read it directly and returns.
+ * Otherwise it will block until a message becomes available, once it is read it obey the correct ordering.
+ * 
+ * arguments:
+ * int mbox_id -the mailbox id
+ * void *msg_ptr - a pointer to where the message should be copied over to
+ * int msg_max_size - the max size of the message
+ * 
+ * returns:
+ *  int - 0 if was read correctly, or -1 if error
+ */
 int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
-    // Waits to receive a message through a mailbox. If there is a message already
-    // queued in a mail slot, it may read it directly and return (but be careful to obey
-    // the ordering rules we discussed earlier in the spec). Otherwise it will block until
-    // a message is available. (But note the special rules for zero-slot mailboxes, see
-    // above.)
     int msgSize = 0;
     
-    // todo: error checking (RETURN -1)
     if (mbox_id < 0 || mbox_id > MAXMBOX || mailboxes[mbox_id].id < 0) {
         return -1;
     } // then check buffer len
