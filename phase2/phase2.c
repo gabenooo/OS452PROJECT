@@ -780,7 +780,6 @@ int getNewId() {
  * returns:
  * pointer to the slot requested
  */
-/*  */
 struct slot* getStartSlot() {
     
     /* Searches each slot */
