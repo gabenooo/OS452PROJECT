@@ -47,19 +47,12 @@ enum INTERRUPTS {
 
 struct shadowPCB {
     int pid; // if pid =0, proccess is dead
-    // USLOSS_Context context;
-    // char name[MAXNAME]; 
-    //State?
     int priority; 
     int status;
     int zombie;
     int number_of_children;
-    // char * stack;
-    // struct PCB* first_child;
-    // struct PCB* parent;
-    // struct PCB* next_sibling;
-    // struct PCB* run_queue_next;
     int blocked;
+    struct slot* slotToRead;
 
 
     //will need:
@@ -125,6 +118,7 @@ static struct slot mailSlots[MAXSLOTS];
 
 void (*systemCallVec[MAXSYSCALLS])(USLOSS_Sysargs *args);
 
+int consumerQueued;
 int curMailboxID;
 int curSlotID;
 int curTime;
@@ -165,9 +159,6 @@ void phase2_clockHandler(void){
         MboxCondSend(CLOCK, &status, sizeof(status));
         curTime = currentTime();
     }
-    // USLOSS_Console("SENDING\n");
-    
-    // USLOSS_Console("SENT\n");
 }
 
 void syscallHandler(int _, void *arg){
@@ -217,6 +208,7 @@ void phase2_init(void) {
     curMailboxID = 0;
     curSlotID = 0;
     curTime = 0;
+    consumerQueued = 0;
 
     memset(shadowProcTable, 0, sizeof(shadowProcTable));
 
@@ -400,7 +392,18 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
         int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
-        //USLOSS_Console("Unblocking proc\n");
+
+        /* Unblock the process */
+        
+        if (mailboxes[mbox_id].numSlots > 0) {
+            if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
+                shadowProcTable[pid % MAXPROC].slotToRead = mailboxes[mbox_id].slotsQueue;
+            }
+            /* Removes message from slot queue */
+            mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
+            mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
+        }
+
         unblockProc(pid);
 
     } else if (mailboxes[mbox_id].numSlots <= 0) {
@@ -490,33 +493,32 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             cur->cNext = &shadowProcTable[QueProcID % MAXPROC];
         }
         blockMe(99);
-        //USLOSS_Console("Unblocking me\n");
 
-        if (mailboxes[mbox_id].id < 0) { return -1; }
-        if (mailboxes[mbox_id].numSlots > 0){
-            msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
-            if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
-                if (mailboxes[mbox_id].slotsQueue->msgSize > msg_max_size) {
-                return -1;
-                }
-                strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
-            }
-            /* Removes message from slot queue */
-            mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
-            mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
-            /* Removes a producer if present from the producer queue */
-            if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
-                if (shadowProcTable[mailboxes[mbox_id % MAXMBOX].producerQueue->pid].blocked == 1) {
-                    shadowProcTable[mailboxes[mbox_id % MAXMBOX].producerQueue->pid].blocked = 0;
-                    unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);  
-                }    
-            }
-            
-            return msgSize; 
-            
-        } else {
-            return 0;
+        if (shadowProcTable[getpid() % MAXPROC].slotToRead == NULL || shadowProcTable[getpid() % MAXPROC].slotToRead->msgSize > msg_max_size) {
+            return -1;
         }
+
+        /* Removes a producer if present from the producer queue */
+        if (mailboxes[mbox_id].id < 0) { return -1; }
+
+ 
+        msgSize = shadowProcTable[getpid() % MAXPROC].slotToRead->msgSize;
+        strcpy(msg_ptr, shadowProcTable[getpid() % MAXPROC].slotToRead->mailSlot);
+
+        /* Removes message from slot queue */
+        shadowProcTable[getpid() % MAXPROC].slotToRead = NULL;
+
+
+        /* Removes a producer if present from the producer queue */
+        if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
+            if (shadowProcTable[mailboxes[mbox_id % MAXMBOX].producerQueue->pid].blocked == 1) {
+                shadowProcTable[mailboxes[mbox_id % MAXMBOX].producerQueue->pid].blocked = 0;
+                unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);  
+            }    
+        }
+        
+        return msgSize; 
+            
     }
 
     return 0;
