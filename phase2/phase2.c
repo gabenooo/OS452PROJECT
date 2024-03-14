@@ -338,6 +338,21 @@ int MboxRelease(int mbox_id){
     return 0;
 }
 
+/*
+ * Function:  MboxSendHelper
+ * --------------------
+ * Called by MboxSend and MboxSendConditional. Sends a message on a mailbox but only blocks
+ * if its not conditional
+ * 
+ * arguments
+ * int mbox_id        - the mailbox id to send a message on
+ * void* msg_ptr      - the message to be sent
+ * int msg_size       - the size of the message to be sent
+ * int is_conditional - a flag whether this is a conditional send or not
+ * 
+ * returns
+ * int of the status: 0 if successful, -2 if no more slots, -1 if mailbox has been released
+ */
 int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional) {
     struct slot* curSlot;
 
@@ -345,7 +360,6 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
     if (mailboxes[mbox_id].id < 0 || msg_size > mailboxes[mbox_id].slotSize) {
         return -1;
     }
-
     if (!(mailboxes[mbox_id].numSlots <= 0)) {
         curSlot = getStartSlot();
         if (curSlot == NULL) {
@@ -353,13 +367,12 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         }
     }
 
-    //USLOSS_Console("Mailbox is %d and numSlots in use is %d and number of slots is %d\n", mbox_id, mailboxes[mbox_id % MAXMBOX].numSlotsInUse, mailboxes[mbox_id % MAXMBOX].numSlots);
-    //USLOSS_Console("Mailbox is %d and consumer queue ID is %p\n", mbox_id, mailboxes[mbox_id % MAXMBOX].consumerQueue);
-
+    /* If case of 0 slot mailbox, go to the check of any recievers, since we have no msg to queue */
     if (mailboxes[mbox_id % MAXMBOX].numSlots == 0 && mailboxes[mbox_id % MAXMBOX].consumerQueue != NULL) {
         goto ConsumerQueue;
     }
 
+    /* If the slots in the mailbox are all full, then block this process until one opens up */
     if ( (mailboxes[mbox_id % MAXMBOX].numSlotsInUse >= mailboxes[mbox_id % MAXMBOX].numSlots) ) {
         int QueProcID = getpid();
         shadowProcTable[QueProcID % MAXPROC].blocked = 1;
@@ -372,21 +385,17 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
             return -2;
         } else {
             if (cur == NULL){
-                //USLOSS_Console("should be null\n");
                 mailboxes[mbox_id].producerQueue = &shadowProcTable[QueProcID % MAXPROC];
             } else {
-                
                 while (cur->pNext != NULL){
-                    //USLOSS_Console("%d\n", cur->pid);
                     cur = cur->pNext;
                 }
                 cur->pNext = &shadowProcTable[QueProcID % MAXPROC];
             }
-            //USLOSS_Console("BLOCKING ME %d %d %d\n", QueProcID, shadowProcTable[QueProcID].pid, mailboxes[mbox_id].producerQueue->pid);
             blockMe(98);
-            //USLOSS_Console("UNBLOCKING ME \n");
-
         }
+
+        /* Check if the mailbox has been released */
         if (mailboxes[mbox_id].id < 0) { return -1; }
         mailboxes[mbox_id].producerQueue = mailboxes[mbox_id].producerQueue->pNext;  
         if (mailboxes[mbox_id].numSlots <= 0 ) { return 0; }
@@ -420,7 +429,6 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
 
         /* Unblock the process */
-        //USLOSS_Console("Unblocking\n");
         if (mailboxes[mbox_id].numSlots > 0) {
             if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
                 shadowProcTable[pid % MAXPROC].slotToRead = mailboxes[mbox_id].slotsQueue;
@@ -429,27 +437,32 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
             mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
             mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
         }
-
         unblockProc(pid);
-
+    /* In cases of 0 slot mailboxes, block until there is a recieve waiting */
     } else if (mailboxes[mbox_id].numSlots <= 0) {
         if ( is_conditional == 1 ) {
             return -2;
         } else {
-            //mUSLOSS_Console("blocking\n");
             blockMe(98);
-            //USLOSS_Console("UNBLOCKING\n");
-
         }
         goto ConsumerQueue;
     }
-
     return 0;
-
-
 }
 
-// returns 0 if successful, -1 if invalid args
+/*
+ * Function:  MboxSend
+ * --------------------
+ * Sends a message on a given mailbox
+ * 
+ * arguments
+ * int mbox_id        - the mailbox id to send a message on
+ * void* msg_ptr      - the message to be sent
+ * int msg_size       - the size of the message to be sent
+ * 
+ * returns
+ * int of the status: 0 if successful, -2 if no more slots, -1 if mailbox has been released
+ */
 int MboxSend(int mbox_id, void *msg_ptr, int msg_size){
     return MboxSendHelper(mbox_id, msg_ptr, msg_size, 0);
 }
@@ -555,41 +568,45 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
 }
 
 
-// returns 0 if successful, 1 if mailbox full, -1 if illegal args
+/*
+ * Function:  MboxCondSend
+ * --------------------
+ * Sends a message on a given inbox, but if there is not messages waiting, will return and not block
+ * 
+ * arguments
+ * int mbox_id        - the mailbox id to send a message on
+ * void* msg_ptr      - the message to be sent
+ * int msg_size       - the size of the message to be sent
+ * 
+ * returns
+ * int of the status: 0 if successful, -2 if no more slots, -1 if mailbox has been released
+ */
 int MboxCondSend(int mbox_id, void *msg_ptr, int msg_size){
     return MboxSendHelper(mbox_id, msg_ptr, msg_size, 1);
 }
 
-
-// returns 0 if successful, 1 if no msg available, -1 if illegal args
+/*
+ * Function:  MboxCondRecv
+ * --------------------
+ * Recieves a message on a given inbox, but if there is not messages waiting, will return and not block
+ * 
+ * arguments
+ * int mbox_id        - the mailbox id to recieve a message on
+ * void* msg_ptr      - an out paramter of the message to be copied into
+ * int msg_max_size   - the max message size allowed to be copied into the msg_ptr
+ * 
+ * returns
+ * int of the actual message size, or -2 if no messages waiting, or -1 if mailbox has been released
+ */
 int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
-    // These functions work exactly like their non-Cond versions, except that they
-    // refuse to block. If, at any point, they would normally have to block, they will
-    // return -2 instead.
-    // While these functions will never block, they might context switch, if they
-    // wake up a process that was higher priority than the one on which the interrupt
-    // handler is running. This is not a problem.
-    // Note that you may find it useful, instead of implementing two different copies
-    // of Send() and Recv(), to instead create (private) helper functions, which both
-    // the Cond and non-Cond versions of your functions can call. But remember: you
-    // must not change the declaration of any function called by the testcases!
     int msgSize = 0;
-    // todo: error checking (RETURN -1)
+    /* Error checking */
     if (mailboxes[mbox_id].id < 0 || mbox_id > MAXMBOX){
         return -1;
-    } // then check buffer len
-
-    // USLOSS_Console("--Starting----\n");
-    // struct slot* curSlot = mailboxes[mbox_id].slotsQueue;
-    // while(curSlot != NULL) {
-    //     USLOSS_Console("----%s----\n", curSlot->mailSlot);
-    //     curSlot = curSlot->nextSlot;
-    // }
-    // USLOSS_Console("--Ending----\n");
-
+    }
 
     if (mailboxes[mbox_id].slotsQueue != NULL){
-        // a message is waiting so we copy it over
+        /* a message is waiting so we copy it over */ 
         msgSize = mailboxes[mbox_id].slotsQueue->msgSize;
         if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
             strcpy(msg_ptr, mailboxes[mbox_id].slotsQueue->mailSlot);
@@ -617,19 +634,21 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
     return 0;
 }
 
-
-// type = interrupt device type, unit = # of device (when more than one),
-// status = where interrupt handler puts device's status register.
+/*
+ * Function:  waitDevice
+ * --------------------
+ * Waits for an interupt to fire on a given device and only return once that has occured
+ * 
+ * arguments
+ * int type      - the interupt device number
+ * void* payload - an int of the unit to get (0 for clock; 0,1 for disk; 0,1,2,3 for terminal)
+ * int* status   - an out parameter of the status that the interupt gave
+ * 
+ * returns
+ * void
+ */
 void waitDevice(int type, int unit, int *status){
-    // Waits for an interrupt to fire, on a given device. Only three device types are
-    // valid: the clock, disk, and terminal devices. The unit field must be a valid value
-    // (0 for clock; 0,1 for disk; 0,1,2,3 for terminal); if it is not, report an error and
-    // halt the simulation.
-    // This function will Recv() from the proper mailbox for this device; when the
-    // message arrives, it will store the status (remember, the status was sent, as the
-    // message payload, from the interrupt handler) into the out parameter and then
-    // return.
-
+    /* Disk devices */
     if (type == 0){
         MboxRecv(CLOCK, status, sizeof(int));
     } else if (type == USLOSS_DISK_DEV){
@@ -643,6 +662,7 @@ void waitDevice(int type, int unit, int *status){
             default:
                 USLOSS_Halt(0);
         }
+    /* Terminal devices */
     } else if (type == USLOSS_TERM_DEV){
         switch (unit) {
             case 0:
@@ -668,7 +688,18 @@ void waitDevice(int type, int unit, int *status){
 
 /******************** INTERUPT HANDLERS ********************/
 
-/* Handles interups for terminal */
+/*
+ * Function:  termInteruptHandler
+ * --------------------
+ * Handles interups for terminal
+ * 
+ * arguments
+ * int _ - used as the basic handler definition, not needed here
+ * void* payload - an int of the unit to get
+ * 
+ * returns
+ * void
+ */
 void termInteruptHandler(int _, void* payload) {
     /* Unpacks the initial data */
     int unit = (int)(long)payload;
@@ -689,8 +720,18 @@ void termInteruptHandler(int _, void* payload) {
 
     MboxCondSend(termDev, &status, sizeof(status));
 }
-
-/* Handles interupts for disk */
+/*
+ * Function:  diskInteruptHandler
+ * --------------------
+ * Handles interupts for disk
+ * 
+ * arguments
+ * int _ - used as the basic handler definition, not needed here
+ * void* payload - an int of the unit to get
+ * 
+ * returns
+ * void
+ */
 void diskInteruptHandler(int _, void* payload) {
     /* Unpacks the initial data */
     int unit = (int)(long)payload;
@@ -711,7 +752,14 @@ void diskInteruptHandler(int _, void* payload) {
 
 /******************** ALL THE HELPER FUNCTIONS ********************/
 
-/* Gets an empty mailbox ID, returns -1 if full */
+/*
+ * Function:  getNewId
+ * --------------------
+ * Gets an empty mailbox ID
+ * 
+ * returns
+ * int of the mailbox ID, or -1 if full
+ */
 int getNewId() {
     /* Searches each mailbox for one not in use */
     for (int i = 0; i < MAXMBOX; i++) {
@@ -724,8 +772,15 @@ int getNewId() {
 }
 
 
-
-/* Returns the index of the start slot for the series of slots requested */
+/*
+ * Function:  getStartSlot
+ * --------------------
+ * Gets the index of an unused slot
+ * 
+ * returns:
+ * pointer to the slot requested
+ */
+/*  */
 struct slot* getStartSlot() {
     
     /* Searches each slot */
