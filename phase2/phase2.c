@@ -108,7 +108,7 @@ void phase2_start_service_processes(void){
 void phase2_clockHandler(void){
     // Called by Phase 1 from the clock interrupt. Use it to implement any logic
     // that you want to run every time that the clock interrupt occurs.
-    if ( currentTime() - curTime >= 100 ) {// && mailboxes[CLOCK].consumerQueue != NULL) {
+    if ( currentTime() - curTime >= 100000 ) {// && mailboxes[CLOCK].consumerQueue != NULL) {
         int status = 0;// = currentTime();
         //USLOSS_Console("CALLING device input; also cur time is : %d\n", currentTime());
         USLOSS_DeviceInput(USLOSS_CLOCK_DEV, 0, &status);
@@ -351,6 +351,7 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
         int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
+        USLOSS_Console("Unblocking proc\n");
         unblockProc(pid);
 
     } else if (mailboxes[mbox_id].numSlots <= 0) {
@@ -440,6 +441,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             cur->cNext = &shadowProcTable[QueProcID % MAXPROC];
         }
         blockMe(99);
+        USLOSS_Console("Unblocking me\n");
 
         if (mailboxes[mbox_id].id < 0) { return -1; }
         if (mailboxes[mbox_id].numSlots > 0){
@@ -460,6 +462,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
                     unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);  
                 }    
             }
+            
             return msgSize; 
             
         } else {
@@ -504,8 +507,15 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         }
 
         /* Removes message from slot queue */
-        mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
+        struct slot* curSlot = mailboxes[mbox_id].slotsQueue;
         mailboxes[mbox_id].slotsQueue = mailboxes[mbox_id].slotsQueue->nextSlot;
+        mailboxes[mbox_id % MAXMBOX].numSlotsInUse--;
+        curSlot->inUse = 0;
+        curSlot->nextSlot = NULL;
+        for ( int j = 0; j < MAX_MESSAGE; j++) {
+            mailboxes[mbox_id].slotsQueue->mailSlot[j] = 0;
+        }
+        
         /* Removes a producer if present from the producer queue */
         if (mailboxes[mbox_id % MAXMBOX].producerQueue != NULL) { 
             unblockProc(mailboxes[mbox_id % MAXMBOX].producerQueue->pid);     
