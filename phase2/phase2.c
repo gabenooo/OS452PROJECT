@@ -3,13 +3,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <phase1.h>
+/*
+* File: phase2.c
+* Authors: Kyle, Gabe Noriega
+* Class: CSC 452 Russ Lewis
+*
+* Purpose: the purpose of this code is to simulate the mailbox system that allows
+* us to handle interrupts in our simulation, as well as inter proc communication. 
+*/
 
 
-//systemCallVec;
-
-//slots with size MAX_MESSAGE
-
-//shadow proccess table
+/*
+* ENUM INTERRUPTS
+* ---------------
+* this is a enum that holds the mailbox ids according to device, used for handeling interrups
+*/
 enum INTERRUPTS {
     CLOCK = 0,
     DISK01 = 1,
@@ -19,6 +27,23 @@ enum INTERRUPTS {
     TERM03 = 5,
     TERM04 = 6
 };
+
+/*
+ * Struct:  shadowPCB
+ * --------------------
+ * This is the struct that is the shadow (or copy) of the process control block that uses a mailbox. It will hold feilds that correspond to
+ * the actual PCB.
+ * 
+ * feilds:
+ * pid - the process id number
+ * priority - the priority of the process within a process table
+ * status - this is an int that tell if a process is runable, running, or blocked
+ * zombie - an int used to denote if a child or parent is a zombie process or not
+ * number_of_children - an int used for debugging to see how many children a given process has
+ * blocked - a bit to denote if a process is blocked or not 
+ * struct shadowPCB* pNext - producer next pointer
+ * struct shadowPCB* cNext - consumer next pointer
+ */
 
 struct shadowPCB {
     int pid; // if pid =0, proccess is dead
@@ -36,9 +61,25 @@ struct shadowPCB {
     
 };
 
+// shadowProcTable is the shadow table that holds the pcb copys
 struct shadowPCB shadowProcTable[MAXPROC];
 
-
+/*
+ * Struct:  mailbox
+ * --------------------
+ * This is the struct that is the mailbox. It represents one mailbox slot in the mailboxes array. it holds the slot queue that
+ * procs use to send messages
+ * 
+ * variables:
+ * id - the mailbox id number
+ * start - the start of the slot linked list
+ * end - the end of the slot linked list
+ * numSlots - the number of slots the mailbox can have
+ * slotSize - the size of each slot, message size
+ * slotsQueue - slotsQueue linked list
+ * producerQueue- producer pointer queue
+ * consumerQueue - consumer pointer queue
+ */
 struct mailbox {
     int id;
     struct slot * start; //linked list to not have contigus slots
@@ -53,9 +94,17 @@ struct mailbox {
     struct shadowPCB* consumerQueue;
 };
 
-//queue of producer and consumer, 
-// can get pid when they call mailbConsoleox send we call call getPID -> then use that to make a copy of the proccess table entry in our shadow table
-
+/*
+ * Struct:  slot
+ * --------------------
+ * This is the struct that represents a single slot where the messages get stored
+ * 
+ * variables:
+ * inuse- int that represents if the slot is in use
+ * msgSize - msg size
+ * mailSlot - the actual message
+ * nextSlot - the pointer to the next slot in the list
+ */
 
 struct slot{
     int inUse;
