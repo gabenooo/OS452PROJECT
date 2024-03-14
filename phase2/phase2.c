@@ -345,7 +345,7 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
 
         /* Unblock the process */
-        
+        //USLOSS_Console("Unblocking\n");
         if (mailboxes[mbox_id].numSlots > 0) {
             if (mailboxes[mbox_id].slotsQueue->mailSlot != NULL) { 
                 shadowProcTable[pid % MAXPROC].slotToRead = mailboxes[mbox_id].slotsQueue;
@@ -500,6 +500,14 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         return -1;
     } // then check buffer len
 
+    // USLOSS_Console("--Starting----\n");
+    // struct slot* curSlot = mailboxes[mbox_id].slotsQueue;
+    // while(curSlot != NULL) {
+    //     USLOSS_Console("----%s----\n", curSlot->mailSlot);
+    //     curSlot = curSlot->nextSlot;
+    // }
+    // USLOSS_Console("--Ending----\n");
+
 
     if (mailboxes[mbox_id].slotsQueue != NULL){
         // a message is waiting so we copy it over
@@ -515,7 +523,7 @@ int MboxCondRecv(int mbox_id, void *msg_ptr, int msg_max_size){
         curSlot->inUse = 0;
         curSlot->nextSlot = NULL;
         for ( int j = 0; j < MAX_MESSAGE; j++) {
-            mailboxes[mbox_id].slotsQueue->mailSlot[j] = 0;
+            curSlot->mailSlot[j] = 0;
         }
         
         /* Removes a producer if present from the producer queue */
