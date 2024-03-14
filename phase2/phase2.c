@@ -351,7 +351,7 @@ int MboxSendHelper(int mbox_id, void *msg_ptr, int msg_size, int is_conditional)
         mailboxes[mbox_id % MAXMBOX].slotsQueue = curSlot;
         int pid = mailboxes[mbox_id % MAXMBOX].consumerQueue->pid;
         mailboxes[mbox_id % MAXMBOX].consumerQueue = mailboxes[mbox_id % MAXMBOX].consumerQueue->cNext;
-        USLOSS_Console("Unblocking proc\n");
+        //USLOSS_Console("Unblocking proc\n");
         unblockProc(pid);
 
     } else if (mailboxes[mbox_id].numSlots <= 0) {
@@ -441,7 +441,7 @@ int MboxRecv(int mbox_id, void *msg_ptr, int msg_max_size){
             cur->cNext = &shadowProcTable[QueProcID % MAXPROC];
         }
         blockMe(99);
-        USLOSS_Console("Unblocking me\n");
+        //USLOSS_Console("Unblocking me\n");
 
         if (mailboxes[mbox_id].id < 0) { return -1; }
         if (mailboxes[mbox_id].numSlots > 0){
