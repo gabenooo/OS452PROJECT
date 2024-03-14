@@ -4,20 +4,20 @@
 #include <string.h>
 #include <phase1.h>
 /*
-* File: phase2.c
-* Authors: Kyle, Gabe Noriega
-* Class: CSC 452 Russ Lewis
-*
-* Purpose: the purpose of this code is to simulate the mailbox system that allows
-* us to handle interrupts in our simulation, as well as inter proc communication. 
-*/
+ * File: phase2.c
+ * Authors: Kyle, Gabe Noriega
+ * Class: CSC 452 Russ Lewis
+ *
+ * Purpose: the purpose of this code is to simulate the mailbox system that allows
+ * us to handle interrupts in our simulation, as well as inter proc communication. 
+ */
 
 
 /*
-* ENUM INTERRUPTS
-* ---------------
-* this is a enum that holds the mailbox ids according to device, used for handeling interrups
-*/
+ * ENUM INTERRUPTS
+ * ---------------
+ * this is a enum that holds the mailbox ids according to device, used for handeling interrups
+ */
 enum INTERRUPTS {
     CLOCK = 0,
     DISK01 = 1,
@@ -38,7 +38,6 @@ enum INTERRUPTS {
  * pid - the process id number
  * priority - the priority of the process within a process table
  * status - this is an int that tell if a process is runable, running, or blocked
- * zombie - an int used to denote if a child or parent is a zombie process or not
  * number_of_children - an int used for debugging to see how many children a given process has
  * blocked - a bit to denote if a process is blocked or not 
  * struct shadowPCB* pNext - producer next pointer
@@ -49,7 +48,6 @@ struct shadowPCB {
     int pid; // if pid =0, proccess is dead
     int priority; 
     int status;
-    int zombie;
     int number_of_children;
     int blocked;
     struct slot* slotToRead;
@@ -61,7 +59,9 @@ struct shadowPCB {
     
 };
 
-// shadowProcTable is the shadow table that holds the pcb copys
+/*
+ * shadowProcTable is the shadow table that holds the pcb copys
+ */
 struct shadowPCB shadowProcTable[MAXPROC];
 
 /*
@@ -113,15 +113,22 @@ struct slot{
     struct slot * nextSlot;
 };
 
+/*
+ * mailboxes is the array of mailbox structs
+ */
 static struct mailbox mailboxes[MAXMBOX];
+/*
+ * mailSlots is the array of slots
+ */
 static struct slot mailSlots[MAXSLOTS];
-
+/*
+ * syscallvec is the array of system call functions
+ */
 void (*systemCallVec[MAXSYSCALLS])(USLOSS_Sysargs *args);
 
-int consumerQueued;
-int curMailboxID;
-int curSlotID;
-int curTime;
+int curMailboxID; // global curmailboxid
+int curSlotID;    // global curSlotID
+int curTime; // global cur time
 
 /* Declaring helper functions here since we can't update the .h file*/
 struct slot* getStartSlot();
@@ -130,12 +137,17 @@ void termInteruptHandler(int _, void* payload);
 void diskInteruptHandler(int _, void* payload);
 void nullsys();
 
-
+/*
+ * Function:  phase2_start_service_processes
+ * --------------------
+ * this function is called by Phase 1 from init, once processes are running but before the testcase
+ * begins. this creates the interupt mailboxes 
+ * 
+ * arguments:
+ * void
+ * 
+ */
 void phase2_start_service_processes(void){
-    // Called by Phase 1 from init, once processes are running but before the testcase
-    // begins. If your implementation requires any service processes to be running for
-    // Phase 2 (I don’t expect that it will), then this is the place to call spork() to
-    // create them.
 
     /* Creates the interupt mailboxes */
     MboxCreate(1, sizeof(int));
@@ -148,19 +160,34 @@ void phase2_start_service_processes(void){
 
 }
 
+/*
+ * Function:  phase2_clockHandler
+ * --------------------
+ * this function is called by Phase 1 from the clock interrupt. it implements logic
+ * that runs every time that the clock interrupt occurs. 
+ * 
+ * arguments:
+ * none
+ * 
+ */
 void phase2_clockHandler(void){
-    // Called by Phase 1 from the clock interrupt. Use it to implement any logic
-    // that you want to run every time that the clock interrupt occurs.
-    if ( currentTime() - curTime >= 100000 ) {// && mailboxes[CLOCK].consumerQueue != NULL) {
-        int status = 0;// = currentTime();
-        //USLOSS_Console("CALLING device input; also cur time is : %d\n", currentTime());
+    if ( currentTime() - curTime >= 100000 ) {
+        int status = 0;
         USLOSS_DeviceInput(USLOSS_CLOCK_DEV, 0, &status);
-        //USLOSS_Console("status is %d\n", status);
         MboxCondSend(CLOCK, &status, sizeof(status));
         curTime = currentTime();
     }
 }
 
+/*
+ * Function:  syscallHandler
+ * --------------------
+ * this function is the function that gets put in the USLOSS_IntVec, and is used to 
+ * 
+ * arguments:
+ * none
+ * 
+ */
 void syscallHandler(int _, void *arg){
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     if (args->number >= MAXSYSCALLS || args->number < 0){
@@ -208,7 +235,6 @@ void phase2_init(void) {
     curMailboxID = 0;
     curSlotID = 0;
     curTime = 0;
-    consumerQueued = 0;
 
     memset(shadowProcTable, 0, sizeof(shadowProcTable));
 
