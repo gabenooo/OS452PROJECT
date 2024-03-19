@@ -30,6 +30,8 @@ int spawn(void* arg) {
 void terminate(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
     int pid = getpid();
+    USLOSS_Console("pid to terminate is %d\n", pid);
+    
     int returnStatus = 0;
 
     while (join(&returnStatus) != -2) {
@@ -43,7 +45,14 @@ void wait(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
 
     int returnStatus;
-    int joinStatus = join(args->arg2);
+    
+    USLOSS_Console("joining\n");
+
+    int joinStatus = join(&returnStatus);
+
+    USLOSS_Console("Return status is %d\n", returnStatus);
+
+    USLOSS_Console("Join status is %d\n", joinStatus);
 
     /* If it joined with a child then set the pid accordingly */
     if (joinStatus >= 0 ) {
