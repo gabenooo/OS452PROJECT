@@ -35,16 +35,18 @@ void terminate(void* arg) {
         /* continue to try and join until it is negative 2 */
     }
 
-    quit(status);
+    quit(args->arg1);
 }
 
-int wait(int *pid, int *status) {
+int wait(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+
     int returnStatus;
-    int joinStatus = join(status);
+    int joinStatus = join(args->arg2);
 
     /* If it joined with a child then set the pid accordingly */
     if (joinStatus >= 0 ) {
-        *pid = joinStatus;
+        args->arg1 = joinStatus;
     }
 
     return joinStatus;
