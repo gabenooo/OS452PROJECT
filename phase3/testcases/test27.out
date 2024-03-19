@@ -1,0 +1,324 @@
+phase4_start_service_processes() called -- currently a NOP
+start3(): started
+start3(): spawned process  5 : i= 0 PRIMES[i]= 2
+start3(): spawned process  6 : i= 1 PRIMES[i]= 3
+start3(): spawned process  7 : i= 2 PRIMES[i]= 5
+start3(): spawned process  8 : i= 3 PRIMES[i]= 7
+start3(): spawned process  9 : i= 4 PRIMES[i]=11
+start3(): spawned process 10 : i= 5 PRIMES[i]=13
+start3(): spawned process 11 : i= 6 PRIMES[i]=17
+start3(): spawned process 12 : i= 7 PRIMES[i]=19
+start3(): spawned process 13 : i= 8 PRIMES[i]=23
+start3(): spawned process 14 : i= 9 PRIMES[i]=29
+start3(): spawned process 15 : i=10 PRIMES[i]=31
+start3(): spawned process 16 : i=11 PRIMES[i]=37
+start3(): spawned process 17 : i=12 PRIMES[i]=41
+start3(): spawned process 18 : i=13 PRIMES[i]=43
+start3(): spawned process 19 : i=14 PRIMES[i]=47
+start3(): spawned process 20 : i=15 PRIMES[i]=53
+start3(): spawned process 21 : i=16 PRIMES[i]=59
+start3(): spawned process 22 : i=17 PRIMES[i]=61
+start3(): spawned process 23 : i=18 PRIMES[i]=67
+start3(): spawned process 24 : i=19 PRIMES[i]=71
+start3(): spawned process 25 : i=20 PRIMES[i]=73
+start3(): spawned process 26 : i=21 PRIMES[i]=79
+start3(): spawned process 27 : i=22 PRIMES[i]=83
+start3(): spawned process 28 : i=23 PRIMES[i]=89
+start3(): spawned process 29 : i=24 PRIMES[i]=97
+start3(): Waking up semaphore[0], with counter=2
+start3(): Waiting for all of the worker processes to quit()...
+worker 0 : started : PRIMES[arg]=2
+worker 0 : woke up.  Counter was: 2 PRIMES[0]=2
+worker 0 : counter=3 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : started : PRIMES[arg]=3
+worker 1 : woke up.  Counter was: 3 PRIMES[1]=3
+worker 1 : counter=4 PRIMES[0]=2 : calling V() semaphore[0]
+worker 2 : started : PRIMES[arg]=5
+worker 3 : started : PRIMES[arg]=7
+worker 4 : started : PRIMES[arg]=11
+worker 5 : started : PRIMES[arg]=13
+worker 6 : started : PRIMES[arg]=17
+worker 7 : started : PRIMES[arg]=19
+worker 8 : started : PRIMES[arg]=23
+worker 9 : started : PRIMES[arg]=29
+worker 10 : started : PRIMES[arg]=31
+worker 11 : started : PRIMES[arg]=37
+worker 12 : started : PRIMES[arg]=41
+worker 13 : started : PRIMES[arg]=43
+worker 14 : started : PRIMES[arg]=47
+worker 15 : started : PRIMES[arg]=53
+worker 16 : started : PRIMES[arg]=59
+worker 17 : started : PRIMES[arg]=61
+worker 18 : started : PRIMES[arg]=67
+worker 19 : started : PRIMES[arg]=71
+worker 20 : started : PRIMES[arg]=73
+worker 21 : started : PRIMES[arg]=79
+worker 22 : started : PRIMES[arg]=83
+worker 23 : started : PRIMES[arg]=89
+worker 24 : started : PRIMES[arg]=97
+worker 0 : woke up.  Counter was: 4 PRIMES[0]=2
+worker 0 : counter=5 PRIMES[2]=5 : calling V() semaphore[2]
+worker 2 : woke up.  Counter was: 5 PRIMES[2]=5
+worker 2 : counter=6 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 6 PRIMES[0]=2
+worker 0 : counter=7 PRIMES[3]=7 : calling V() semaphore[3]
+worker 3 : woke up.  Counter was: 7 PRIMES[3]=7
+worker 3 : counter=8 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 8 PRIMES[0]=2
+worker 0 : counter=9 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 9 PRIMES[1]=3
+worker 1 : counter=10 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 10 PRIMES[0]=2
+worker 0 : counter=11 PRIMES[4]=11 : calling V() semaphore[4]
+worker 4 : woke up.  Counter was: 11 PRIMES[4]=11
+worker 4 : counter=12 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 12 PRIMES[0]=2
+worker 0 : counter=13 PRIMES[5]=13 : calling V() semaphore[5]
+worker 5 : woke up.  Counter was: 13 PRIMES[5]=13
+worker 5 : counter=14 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 14 PRIMES[0]=2
+worker 0 : counter=15 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 15 PRIMES[1]=3
+worker 1 : counter=16 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 16 PRIMES[0]=2
+worker 0 : counter=17 PRIMES[6]=17 : calling V() semaphore[6]
+worker 6 : woke up.  Counter was: 17 PRIMES[6]=17
+worker 6 : counter=18 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 18 PRIMES[0]=2
+worker 0 : counter=19 PRIMES[7]=19 : calling V() semaphore[7]
+worker 7 : woke up.  Counter was: 19 PRIMES[7]=19
+worker 7 : counter=20 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 20 PRIMES[0]=2
+worker 0 : counter=21 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 21 PRIMES[1]=3
+worker 1 : counter=22 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 22 PRIMES[0]=2
+worker 0 : counter=23 PRIMES[8]=23 : calling V() semaphore[8]
+worker 8 : woke up.  Counter was: 23 PRIMES[8]=23
+worker 8 : counter=24 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 24 PRIMES[0]=2
+worker 0 : counter=25 PRIMES[2]=5 : calling V() semaphore[2]
+worker 2 : woke up.  Counter was: 25 PRIMES[2]=5
+worker 2 : counter=26 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 26 PRIMES[0]=2
+worker 0 : counter=27 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 27 PRIMES[1]=3
+worker 1 : counter=28 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 28 PRIMES[0]=2
+worker 0 : counter=29 PRIMES[9]=29 : calling V() semaphore[9]
+worker 9 : woke up.  Counter was: 29 PRIMES[9]=29
+worker 9 : counter=30 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 30 PRIMES[0]=2
+worker 0 : counter=31 PRIMES[10]=31 : calling V() semaphore[10]
+worker 10 : woke up.  Counter was: 31 PRIMES[10]=31
+worker 10 : counter=32 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 32 PRIMES[0]=2
+worker 0 : counter=33 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 33 PRIMES[1]=3
+worker 1 : counter=34 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 34 PRIMES[0]=2
+worker 0 : counter=35 PRIMES[2]=5 : calling V() semaphore[2]
+worker 2 : woke up.  Counter was: 35 PRIMES[2]=5
+worker 2 : counter=36 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 36 PRIMES[0]=2
+worker 0 : counter=37 PRIMES[11]=37 : calling V() semaphore[11]
+worker 11 : woke up.  Counter was: 37 PRIMES[11]=37
+worker 11 : counter=38 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 38 PRIMES[0]=2
+worker 0 : counter=39 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 39 PRIMES[1]=3
+worker 1 : counter=40 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 40 PRIMES[0]=2
+worker 0 : counter=41 PRIMES[12]=41 : calling V() semaphore[12]
+worker 12 : woke up.  Counter was: 41 PRIMES[12]=41
+worker 12 : counter=42 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 42 PRIMES[0]=2
+worker 0 : counter=43 PRIMES[13]=43 : calling V() semaphore[13]
+worker 13 : woke up.  Counter was: 43 PRIMES[13]=43
+worker 13 : counter=44 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 44 PRIMES[0]=2
+worker 0 : counter=45 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 45 PRIMES[1]=3
+worker 1 : counter=46 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 46 PRIMES[0]=2
+worker 0 : counter=47 PRIMES[14]=47 : calling V() semaphore[14]
+worker 14 : woke up.  Counter was: 47 PRIMES[14]=47
+worker 14 : counter=48 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 48 PRIMES[0]=2
+worker 0 : counter=49 PRIMES[3]=7 : calling V() semaphore[3]
+worker 3 : woke up.  Counter was: 49 PRIMES[3]=7
+worker 3 : counter=50 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 50 PRIMES[0]=2
+worker 0 : counter=51 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 51 PRIMES[1]=3
+worker 1 : counter=52 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 52 PRIMES[0]=2
+worker 0 : counter=53 PRIMES[15]=53 : calling V() semaphore[15]
+worker 15 : woke up.  Counter was: 53 PRIMES[15]=53
+worker 15 : counter=54 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 54 PRIMES[0]=2
+worker 0 : counter=55 PRIMES[2]=5 : calling V() semaphore[2]
+worker 2 : woke up.  Counter was: 55 PRIMES[2]=5
+worker 2 : counter=56 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 56 PRIMES[0]=2
+worker 0 : counter=57 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 57 PRIMES[1]=3
+worker 1 : counter=58 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 58 PRIMES[0]=2
+worker 0 : counter=59 PRIMES[16]=59 : calling V() semaphore[16]
+worker 16 : woke up.  Counter was: 59 PRIMES[16]=59
+worker 16 : counter=60 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 60 PRIMES[0]=2
+worker 0 : counter=61 PRIMES[17]=61 : calling V() semaphore[17]
+worker 17 : woke up.  Counter was: 61 PRIMES[17]=61
+worker 17 : counter=62 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 62 PRIMES[0]=2
+worker 0 : counter=63 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 63 PRIMES[1]=3
+worker 1 : counter=64 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 64 PRIMES[0]=2
+worker 0 : counter=65 PRIMES[2]=5 : calling V() semaphore[2]
+worker 2 : woke up.  Counter was: 65 PRIMES[2]=5
+worker 2 : counter=66 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 66 PRIMES[0]=2
+worker 0 : counter=67 PRIMES[18]=67 : calling V() semaphore[18]
+worker 18 : woke up.  Counter was: 67 PRIMES[18]=67
+worker 18 : counter=68 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 68 PRIMES[0]=2
+worker 0 : counter=69 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 69 PRIMES[1]=3
+worker 1 : counter=70 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 70 PRIMES[0]=2
+worker 0 : counter=71 PRIMES[19]=71 : calling V() semaphore[19]
+worker 19 : woke up.  Counter was: 71 PRIMES[19]=71
+worker 19 : counter=72 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 72 PRIMES[0]=2
+worker 0 : counter=73 PRIMES[20]=73 : calling V() semaphore[20]
+worker 20 : woke up.  Counter was: 73 PRIMES[20]=73
+worker 20 : counter=74 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 74 PRIMES[0]=2
+worker 0 : counter=75 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 75 PRIMES[1]=3
+worker 1 : counter=76 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 76 PRIMES[0]=2
+worker 0 : counter=77 PRIMES[3]=7 : calling V() semaphore[3]
+worker 3 : woke up.  Counter was: 77 PRIMES[3]=7
+worker 3 : counter=78 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 78 PRIMES[0]=2
+worker 0 : counter=79 PRIMES[21]=79 : calling V() semaphore[21]
+worker 21 : woke up.  Counter was: 79 PRIMES[21]=79
+worker 21 : counter=80 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 80 PRIMES[0]=2
+worker 0 : counter=81 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 81 PRIMES[1]=3
+worker 1 : counter=82 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 82 PRIMES[0]=2
+worker 0 : counter=83 PRIMES[22]=83 : calling V() semaphore[22]
+worker 22 : woke up.  Counter was: 83 PRIMES[22]=83
+worker 22 : counter=84 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 84 PRIMES[0]=2
+worker 0 : counter=85 PRIMES[2]=5 : calling V() semaphore[2]
+worker 2 : woke up.  Counter was: 85 PRIMES[2]=5
+worker 2 : counter=86 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 86 PRIMES[0]=2
+worker 0 : counter=87 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 87 PRIMES[1]=3
+worker 1 : counter=88 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 88 PRIMES[0]=2
+worker 0 : counter=89 PRIMES[23]=89 : calling V() semaphore[23]
+worker 23 : woke up.  Counter was: 89 PRIMES[23]=89
+worker 23 : counter=90 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 90 PRIMES[0]=2
+worker 0 : counter=91 PRIMES[3]=7 : calling V() semaphore[3]
+worker 3 : woke up.  Counter was: 91 PRIMES[3]=7
+worker 3 : counter=92 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 92 PRIMES[0]=2
+worker 0 : counter=93 PRIMES[1]=3 : calling V() semaphore[1]
+worker 1 : woke up.  Counter was: 93 PRIMES[1]=3
+worker 1 : counter=94 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 94 PRIMES[0]=2
+worker 0 : counter=95 PRIMES[2]=5 : calling V() semaphore[2]
+worker 2 : woke up.  Counter was: 95 PRIMES[2]=5
+worker 2 : counter=96 PRIMES[0]=2 : calling V() semaphore[0]
+worker 0 : woke up.  Counter was: 96 PRIMES[0]=2
+worker 0 : counter=97 PRIMES[24]=97 : calling V() semaphore[24]
+worker 24 : woke up.  Counter was: 97 PRIMES[24]=97
+worker 24 : I was the first to wake up after the counter hit its max value.  I will wake up all of the other processes, as well.
+worker 24 : The other threads have been awoken.
+worker 24 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 24 : Ending
+worker 0 : woke up.  Counter was: 98 PRIMES[0]=2
+worker 0 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 0 : Ending
+worker 1 : woke up.  Counter was: 98 PRIMES[1]=3
+worker 1 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 1 : Ending
+worker 2 : woke up.  Counter was: 98 PRIMES[2]=5
+worker 2 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 2 : Ending
+worker 3 : woke up.  Counter was: 98 PRIMES[3]=7
+worker 3 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 3 : Ending
+worker 4 : woke up.  Counter was: 98 PRIMES[4]=11
+worker 4 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 4 : Ending
+worker 5 : woke up.  Counter was: 98 PRIMES[5]=13
+worker 5 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 5 : Ending
+worker 6 : woke up.  Counter was: 98 PRIMES[6]=17
+worker 6 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 6 : Ending
+worker 7 : woke up.  Counter was: 98 PRIMES[7]=19
+worker 7 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 7 : Ending
+worker 8 : woke up.  Counter was: 98 PRIMES[8]=23
+worker 8 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 8 : Ending
+worker 9 : woke up.  Counter was: 98 PRIMES[9]=29
+worker 9 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 9 : Ending
+worker 10 : woke up.  Counter was: 98 PRIMES[10]=31
+worker 10 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 10 : Ending
+worker 11 : woke up.  Counter was: 98 PRIMES[11]=37
+worker 11 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 11 : Ending
+worker 12 : woke up.  Counter was: 98 PRIMES[12]=41
+worker 12 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 12 : Ending
+worker 13 : woke up.  Counter was: 98 PRIMES[13]=43
+worker 13 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 13 : Ending
+worker 14 : woke up.  Counter was: 98 PRIMES[14]=47
+worker 14 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 14 : Ending
+worker 15 : woke up.  Counter was: 98 PRIMES[15]=53
+worker 15 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 15 : Ending
+worker 16 : woke up.  Counter was: 98 PRIMES[16]=59
+worker 16 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 16 : Ending
+worker 17 : woke up.  Counter was: 98 PRIMES[17]=61
+worker 17 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 17 : Ending
+worker 18 : woke up.  Counter was: 98 PRIMES[18]=67
+worker 18 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 18 : Ending
+worker 19 : woke up.  Counter was: 98 PRIMES[19]=71
+worker 19 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 19 : Ending
+worker 20 : woke up.  Counter was: 98 PRIMES[20]=73
+worker 20 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 20 : Ending
+worker 21 : woke up.  Counter was: 98 PRIMES[21]=79
+worker 21 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 21 : Ending
+worker 22 : woke up.  Counter was: 98 PRIMES[22]=83
+worker 22 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 22 : Ending
+worker 23 : woke up.  Counter was: 98 PRIMES[23]=89
+worker 23 : Doing a V() on my own semaphore, so that start3() can P() it later.
+worker 23 : Ending
+start3(): All worker processes have quit().  Calling P() on all of the semaphores.
+start3(): done
+TESTCASE ENDED

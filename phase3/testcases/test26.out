@@ -1,0 +1,19 @@
+phase4_start_service_processes() called -- currently a NOP
+start3(): started
+start3(): spawned the Child1 process 5
+start3(): spawned the Child2 process 6
+start3(): spawned the low-priority process 7
+Child1(): Semaphore 0 created.  I will now call V on it 250000 times.
+Child2(): Semaphore 1 created.  I will now call V on it 250000 times.
+Child1(): V operations completed.  I will now call P on the semaphore the same number of times.
+Child2(): V operations completed.  I will now call P on the semaphore the same number of times.
+Child1(): P operations completed.  I will now call P once more; this will force the process to block, until the Low-Priority Child is able to give us one more V operation.
+Child2(): P operations completed.  I will now call P once more; this will force the process to block, until the Low-Priority Child is able to give us one more V operation.
+LP_Child(): The low-priority child is finally running.  This must not happen until both Child1,Child2 have blocked on their last P operation.
+Child1(): Last P operation has returned.  This process will terminate.
+start3(): child 5 returned status of 1
+Child2(): Last P operation has returned.  This process will terminate.
+start3(): child 6 returned status of 2
+start3(): child 7 returned status of 9
+start3(): done
+TESTCASE ENDED

@@ -1,0 +1,5 @@
+phase4_start_service_processes() called -- currently a NOP
+start3(): started
+start3(): elapsed time in middle =  9 Should be close, but does not have to be an exact match
+start3(): elapsed time at end    = 15 Should be close, but does not have to be an exact match
+TESTCASE ENDED

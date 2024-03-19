@@ -1,0 +1,3 @@
+phase4_start_service_processes() called -- currently a NOP
+start3(): started, and immediately return'ing a 3
+TESTCASE ENDED

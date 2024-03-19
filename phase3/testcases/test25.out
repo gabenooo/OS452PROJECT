@@ -1,0 +1,96 @@
+phase4_start_service_processes() called -- currently a NOP
+start3(): started
+start3(): spawned process 5
+Child1(): starting, pid = 5
+Child2(): starting, pid = 6
+Child2(): spawned process 7
+Child2(): spawned process 8
+Child2(): spawned process 9
+Child2(): spawned process 10
+Child2(): spawned process 11
+Child2(): spawned process 12
+Child2(): spawned process 13
+Child2(): spawned process 14
+Child2(): spawned process 15
+Child2(): spawned process 16
+Child2(): spawned process 17
+Child2(): spawned process 18
+Child2(): spawned process 19
+Child2(): spawned process 20
+Child2(): spawned process 21
+Child2(): spawned process 22
+Child2(): spawned process 23
+Child2(): spawned process 24
+Child2(): spawned process 25
+Child2(): spawned process 26
+Child2(): spawned process 27
+Child2(): spawned process 28
+Child2(): spawned process 29
+Child2(): spawned process 30
+Child2(): spawned process 31
+Child2(): spawned process 32
+Child2(): spawned process 33
+Child2(): spawned process 34
+Child2(): spawned process 35
+Child2(): spawned process 36
+Child2(): spawned process 37
+Child2(): spawned process 38
+Child2(): spawned process 39
+Child2(): spawned process 40
+Child2(): spawned process 41
+Child2(): spawned process 42
+Child2(): spawned process 43
+Child2(): spawned process 44
+Child2(): spawned process 45
+Child2(): spawned process 46
+Child2(): Terminating self and all my children
+Child2a(): starting the code for Child2a: pid=7
+Child2a(): starting the code for Child2a: pid=8
+Child2a(): starting the code for Child2a: pid=9
+Child2a(): starting the code for Child2a: pid=10
+Child2a(): starting the code for Child2a: pid=11
+Child2a(): starting the code for Child2a: pid=12
+Child2a(): starting the code for Child2a: pid=13
+Child2a(): starting the code for Child2a: pid=14
+Child2a(): starting the code for Child2a: pid=15
+Child2a(): starting the code for Child2a: pid=16
+Child2a(): starting the code for Child2a: pid=17
+Child2a(): starting the code for Child2a: pid=18
+Child2a(): starting the code for Child2a: pid=19
+Child2a(): starting the code for Child2a: pid=20
+Child2a(): starting the code for Child2a: pid=21
+Child2a(): starting the code for Child2a: pid=22
+Child2a(): starting the code for Child2a: pid=23
+Child2a(): starting the code for Child2a: pid=24
+Child2a(): starting the code for Child2a: pid=25
+Child2a(): starting the code for Child2a: pid=26
+Child2a(): starting the code for Child2a: pid=27
+Child2a(): starting the code for Child2a: pid=28
+Child2a(): starting the code for Child2a: pid=29
+Child2a(): starting the code for Child2a: pid=30
+Child2a(): starting the code for Child2a: pid=31
+Child2a(): starting the code for Child2a: pid=32
+Child2a(): starting the code for Child2a: pid=33
+Child2a(): starting the code for Child2a: pid=34
+Child2a(): starting the code for Child2a: pid=35
+Child2a(): starting the code for Child2a: pid=36
+Child2a(): starting the code for Child2a: pid=37
+Child2a(): starting the code for Child2a: pid=38
+Child2a(): starting the code for Child2a: pid=39
+Child2a(): starting the code for Child2a: pid=40
+Child2a(): starting the code for Child2a: pid=41
+Child2a(): starting the code for Child2a: pid=42
+Child2a(): starting the code for Child2a: pid=43
+Child2a(): starting the code for Child2a: pid=44
+Child2a(): starting the code for Child2a: pid=45
+Child2a(): starting the code for Child2a: pid=46
+Child1(): spawned process 6
+Child2b(): starting, pid = 47
+Child2c(): starting the code for Child2c
+Child2b(): spawned process 48
+Child1(): spawned process 47
+Child1(): child 47 returned status of 50
+Child1(): done
+start3(): child 5 returned status of 9
+start3(): done
+TESTCASE ENDED

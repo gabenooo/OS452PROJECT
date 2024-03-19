@@ -1,0 +1,4 @@
+phase4_start_service_processes() called -- currently a NOP
+Child1(): started
+start3(): Done.
+TESTCASE ENDED

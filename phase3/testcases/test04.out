@@ -1,0 +1,5 @@
+phase4_start_service_processes() called -- currently a NOP
+start3(): started.  Calling SemCreate
+start3(): sem_result = 0, semaphore = 0
+start3(): sem_result = 0, semaphore = 1
+TESTCASE ENDED
