@@ -38,7 +38,7 @@ void terminate(void* arg) {
     quit(args->arg1);
 }
 
-int wait(void* arg) {
+void wait(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
 
     int returnStatus;
@@ -48,19 +48,43 @@ int wait(void* arg) {
     if (joinStatus >= 0 ) {
         args->arg1 = joinStatus;
     }
-
-    return joinStatus;
 }
 
+void semCreate(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
+void semP(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
+void semV(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
+void getTimeOfDay(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
+void getPid(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
+
 void phase3_init(void){
+    
     systemCallVec[SYS_TERMINATE] = terminate;
     systemCallVec[SYS_WAIT] = wait;
     systemCallVec[SYS_SPAWN] = spawn;
+    systemCallVec[SYS_SEMCREATE] = semCreate;
+    systemCallVec[SYS_SEMP] = semP;
+    systemCallVec[SYS_SEMV] = semV;
+    systemCallVec[SYS_GETTIMEOFDAY] = getTimeOfDay;
+    systemCallVec[SYS_GETPID] = getPid;
 }
 
 void phase3_start_service_processes(void){
     
 }
-
 
 
