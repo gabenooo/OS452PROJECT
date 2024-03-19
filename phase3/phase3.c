@@ -10,7 +10,7 @@
 
 int spawn(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
-    args->arg1 = spork(args->arg5, args->arg1, args->arg2, args->arg3, *args->arg4);
+    args->arg1 = spork(args->arg5, args->arg1, args->arg2, (int)(long)args->arg3, (int)(long)args->arg4);
     //int test = spork(name, func, arg, stackSize, priority);
     //printf("%d\n", pid);
     //  If the process
@@ -20,7 +20,7 @@ int spawn(void* arg) {
 // The PID of the child is returned using an out parameter pid; the return
 // value is 0 if the child was successfully created, and -1 if not.
 
-    if (arg->arg1  < 0) {
+    if ((int)(long)args->arg1 < 0) {
         return -1; 
     }
     return 0;
