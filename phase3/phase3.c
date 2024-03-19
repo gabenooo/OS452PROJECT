@@ -2,6 +2,7 @@
 #include <phase1.h>
 #include <phase2.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <phase1.h>
 
