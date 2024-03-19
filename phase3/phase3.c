@@ -8,7 +8,7 @@
 
 
 void phase3_init(void){
-    systemCallVec[SYS_TERMINATE] = Terminate;
+    systemCallVec[SYS_TERMINATE] = terminate;
 }
 
 void phase3_start_service_processes(void){
@@ -19,6 +19,8 @@ int spawn(char *name, int (*func)(char *), char *arg, int stackSize, int priorit
     
 }
 
-void Terminate(int status) {
+void terminate(int status) {
+    int pid = getpid();
 
+    //while (join())
 }
