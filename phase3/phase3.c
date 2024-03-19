@@ -9,7 +9,7 @@
 
 
 int spawn(void* arg) {
-    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     args->arg1 = spork(args->arg5, args->arg1, args->arg2, (int)(long)args->arg3, (int)(long)args->arg4);
     //int test = spork(name, func, arg, stackSize, priority);
     //printf("%d\n", pid);
