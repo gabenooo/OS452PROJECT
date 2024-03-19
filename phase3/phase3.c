@@ -36,30 +36,56 @@ void terminate(void* arg) {
         /* continue to try and join until it is negative 2 */
     }
 
-    // quit(status);
+    quit(args->arg1);
 }
 
-int wait(int *pid, int *status) {
-    // int returnStatus;
-    // int joinStatus = join(status);
+void wait(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
 
-    // /* If it joined with a child then set the pid accordingly */
-    // if (joinStatus >= 0 ) {
-    //     *pid = joinStatus;
-    // }
+    int returnStatus;
+    int joinStatus = join(args->arg2);
 
-    // return joinStatus;
+    /* If it joined with a child then set the pid accordingly */
+    if (joinStatus >= 0 ) {
+        args->arg1 = joinStatus;
+    }
 }
+
+void semCreate(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
+void semP(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
+void semV(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
+void getTimeOfDay(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
+void getPid(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+}
+
 
 void phase3_init(void){
+    
     systemCallVec[SYS_TERMINATE] = terminate;
     systemCallVec[SYS_WAIT] = wait;
     systemCallVec[SYS_SPAWN] = spawn;
+    systemCallVec[SYS_SEMCREATE] = semCreate;
+    systemCallVec[SYS_SEMP] = semP;
+    systemCallVec[SYS_SEMV] = semV;
+    systemCallVec[SYS_GETTIMEOFDAY] = getTimeOfDay;
+    systemCallVec[SYS_GETPID] = getPid;
 }
 
 void phase3_start_service_processes(void){
     
 }
-
 
 
