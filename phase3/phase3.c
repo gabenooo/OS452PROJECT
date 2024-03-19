@@ -10,6 +10,7 @@
 
 int spawn(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+    args->arg1 = spork(args->arg5, args->arg1, args->arg2, args->arg3, *args->arg4);
     //int test = spork(name, func, arg, stackSize, priority);
     //printf("%d\n", pid);
     //  If the process
@@ -19,7 +20,7 @@ int spawn(void* arg) {
 // The PID of the child is returned using an out parameter pid; the return
 // value is 0 if the child was successfully created, and -1 if not.
 
-    if (*pid < 0) {
+    if (arg->arg1  < 0) {
         return -1; 
     }
     return 0;
@@ -35,19 +36,19 @@ void terminate(void* arg) {
         /* continue to try and join until it is negative 2 */
     }
 
-    quit(status);
+    // quit(status);
 }
 
 int wait(int *pid, int *status) {
-    int returnStatus;
-    int joinStatus = join(status);
+    // int returnStatus;
+    // int joinStatus = join(status);
 
-    /* If it joined with a child then set the pid accordingly */
-    if (joinStatus >= 0 ) {
-        *pid = joinStatus;
-    }
+    // /* If it joined with a child then set the pid accordingly */
+    // if (joinStatus >= 0 ) {
+    //     *pid = joinStatus;
+    // }
 
-    return joinStatus;
+    // return joinStatus;
 }
 
 void phase3_init(void){
