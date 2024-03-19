@@ -8,8 +8,9 @@
 
 
 
-int spawn(char *name, int (*func)(char *), char *arg, int stackSize, int priority, int *pid) {
-    *pid = spork(name, func, arg, stackSize, priority);
+int spawn(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+    //int test = spork(name, func, arg, stackSize, priority);
     //printf("%d\n", pid);
     //  If the process
 // returns, then the trampoline will automatically call Terminate() (still from
@@ -25,7 +26,8 @@ int spawn(char *name, int (*func)(char *), char *arg, int stackSize, int priorit
     
 }
 
-void terminate(int status) {
+void terminate(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
     int pid = getpid();
     int returnStatus = 0;
 
@@ -44,7 +46,7 @@ int wait(int *pid, int *status) {
     if (joinStatus >= 0 ) {
         *pid = joinStatus;
     }
-    
+
     return joinStatus;
 }
 
