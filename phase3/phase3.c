@@ -6,14 +6,22 @@
 #include <string.h>
 #include <phase1.h>
 
+int trampoline(int (*func)(char*), void* args) {
+    unsigned int psr = USLOSS_PsrGet();
+    USLOSS_PsrSet( psr & ~USLOSS_PSR_CURRENT_MODE );
 
+    int returnCode = func(args);
+    USLOSS_PsrSet( psr );
+
+    return returnCode;
+}
 
 int spawn(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
-    unsigned int psr = USLOSS_PsrGet();
-    USLOSS_PsrSet( psr & ~USLOSS_PSR_CURRENT_MODE );
+    
+    
     args->arg1 = spork(args->arg5, args->arg1, args->arg2, (int)(long)args->arg3, (int)(long)args->arg4);
-    USLOSS_PsrSet( psr );
+    
 
 
     
@@ -34,6 +42,7 @@ int spawn(void* arg) {
 }
 
 void terminate(void* arg) {
+    USLOSS_Console("terminate ran\n");
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
     int pid = getpid();
     USLOSS_Console("pid to terminate is %d\n", pid);
