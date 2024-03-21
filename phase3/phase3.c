@@ -9,6 +9,7 @@
 
 struct Semaphore {
     int ID;
+    int mboxId;
     int value;
 };
 
@@ -100,14 +101,45 @@ void wait(void* arg) {
 
 void semCreate(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+
+    /* Finds the next semaphore id */
+    int semID = -1;
+    for (int i = 0; i < MAXSEMS; i++) {
+        if (semaphoreTable[i].ID == -1) {
+            semID = i;
+            break;
+        }
+    }
+
+
+    /* Instantiate the semaphore with the value */
+    if (semID < 0) {
+        args->arg4 = -1;
+    } else {
+        semaphoreTable[semID].ID = semID;
+        semaphoreTable[semID].value = args->arg1;
+        semaphoreTable[semID].mboxId = MboxCreate(0, 0);
+
+        args->arg1 = semID;
+        args->arg4 = 0;
+    }
+
 }
 
 void semP(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+
+    while (semaphoreTable[(long)args->arg1].value == 0) {
+        MboxRecv(semaphoreTable[(long)args->arg1].mboxId, NULL, 0);
+    }
+    semaphoreTable[(long)args->arg1].value--;
 }
 
 void semV(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+
+    semaphoreTable[(long)args->arg1].value++;
+    MboxCondSend(semaphoreTable[(long)args->arg1].mboxId, NULL, 0);
 }
 
 void getTimeOfDay(void* arg) {
@@ -134,6 +166,7 @@ void phase3_init(void){
 
     for (int i = 0; i < MAXSEMS; i++) {
         semaphoreTable[i].ID = -1;
+        semaphoreTable[i].mboxId = 0;
         semaphoreTable[i].value = 0;
     }
 }
