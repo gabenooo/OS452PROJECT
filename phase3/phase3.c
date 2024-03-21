@@ -26,13 +26,16 @@ int trampoline(int mboxId) {
 }
 
 int spawn(void* arg) {
-    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     
+    //new mailboxs 
+    int mbox_id = MboxCreate(2, 50);
+    int result1 = MBoxSend(mbox_id, &args->arg1, sizeof(args->arg1));
+    int result2 = MBoxSend(mbox_id, &args->arg2, sizeof(args->arg2));
     
-    args->arg1 = spork(args->arg5, args->arg1, args->arg2, (int)(long)args->arg3, (int)(long)args->arg4);
+    // send trampolie with mailbox id
+    args->arg1 = spork(args->arg5, trampoline, mbox_id, (int)(long)args->arg3, (int)(long)args->arg4);
     
-
-
     
     //int test = spork(name, func, arg, stackSize, priority);
     //printf("%d\n", pid);
