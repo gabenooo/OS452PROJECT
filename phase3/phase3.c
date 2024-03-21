@@ -1,3 +1,4 @@
+#include <phase3.h>
 #include <phase2.h>
 #include <phase1.h>
 #include <phase2.h>
@@ -5,6 +6,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <phase1.h>
+
+struct Semaphore {
+    int ID;
+    int value;
+};
+
+struct Semaphore semaphoreTable[MAXSEMS];
 
 
 int trampoline(int mboxId) {
@@ -22,12 +30,10 @@ int trampoline(int mboxId) {
     /* Then sets psr to be in user mode to run the user main */
     unsigned int psr = USLOSS_PsrGet();
     USLOSS_PsrSet( psr & ~USLOSS_PSR_CURRENT_MODE );
-    USLOSS_Console("User mode active\n");
 
     int returnCode = func(args);
     Terminate(args);
     USLOSS_PsrSet( psr );
-    USLOSS_Console("User mode deactive\n");
 
     return returnCode;
 }
@@ -123,6 +129,11 @@ void phase3_init(void){
     systemCallVec[SYS_SEMV] = semV;
     systemCallVec[SYS_GETTIMEOFDAY] = getTimeOfDay;
     systemCallVec[SYS_GETPID] = getPid;
+
+    for (int i = 0; i < MAXSEMS; i++) {
+        semaphoreTable[i].ID = -1;
+        semaphoreTable[i].value = 0;
+    }
 }
 
 void phase3_start_service_processes(void){
