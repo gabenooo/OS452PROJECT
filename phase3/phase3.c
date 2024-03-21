@@ -33,7 +33,7 @@ int trampoline(int mboxId) {
     USLOSS_PsrSet( psr & ~USLOSS_PSR_CURRENT_MODE );
 
     int returnCode = func(args);
-    Terminate(args);
+    Terminate(0);
     USLOSS_PsrSet( psr );
 
     return returnCode;
@@ -77,7 +77,6 @@ void terminate(void* arg) {
     while (join(&returnStatus) != -2) {
         /* continue to try and join until it is negative 2 */
     }
-
     quit(args->arg1);
 }
 
