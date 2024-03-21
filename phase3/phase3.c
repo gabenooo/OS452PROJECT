@@ -6,7 +6,15 @@
 #include <string.h>
 #include <phase1.h>
 
-int trampoline(int (*func)(char*), void* args) {
+
+int trampoline(int mboxId) {
+    /* Recieves the function pointer and arguments from the given mailbox */
+    int (*func)(void*);
+    void* args;
+    mboxRecv(mboxId, func);
+    mboxRecv(mboxId, args);
+
+    /* Then sets psr to be in user mode to run the user main */
     unsigned int psr = USLOSS_PsrGet();
     USLOSS_PsrSet( psr & ~USLOSS_PSR_CURRENT_MODE );
 
