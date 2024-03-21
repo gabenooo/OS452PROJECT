@@ -8,6 +8,7 @@
 
 
 int trampoline(int mboxId) {
+    USLOSS_Console("Trampoline called with mailbox id of %d\n", mboxId);
     /* Recieves the function pointer and arguments from the given mailbox */
     int (*func)(void*);
     void* args;
