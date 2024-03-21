@@ -10,10 +10,14 @@
 int trampoline(int mboxId) {
     //USLOSS_Console("Trampoline called with mailbox id of %d\n", mboxId);
     /* Recieves the function pointer and arguments from the given mailbox */
-    int (*func)(void*);
-    void* args;
+    int (*func)(void*) = NULL;
+    void* args = NULL;
+    //USLOSS_Console("Recieving function ptr\n");
     MboxRecv(mboxId, &func, sizeof(func));
+    //USLOSS_Console("Recieving args\n");
     MboxRecv(mboxId, &args, sizeof(args));
+    //USLOSS_Console("Done\n");
+    
 
     /* Then sets psr to be in user mode to run the user main */
     unsigned int psr = USLOSS_PsrGet();
@@ -29,8 +33,9 @@ int spawn(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     
     //new mailboxs 
-    //sole("sending\n");
+    
     int mbox_id = MboxCreate(2, 50);
+    //USLOSS_Console("sending on id %d\n", mbox_id);
     int result1 = MboxSend(mbox_id, &args->arg1, sizeof(args->arg1));
     int result2 = MboxSend(mbox_id, &args->arg2, sizeof(args->arg2));
     
@@ -81,6 +86,9 @@ void wait(void* arg) {
     /* If it joined with a child then set the pid accordingly */
     if (joinStatus >= 0 ) {
         args->arg1 = joinStatus;
+    }
+    if (returnStatus >= 0 ) {
+        args->arg2 = returnStatus;
     }
 }
 
