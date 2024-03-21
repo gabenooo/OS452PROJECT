@@ -12,8 +12,8 @@ int trampoline(int mboxId) {
     /* Recieves the function pointer and arguments from the given mailbox */
     int (*func)(void*);
     void* args;
-    mboxRecv(mboxId, func);
-    mboxRecv(mboxId, args);
+    MboxRecv(mboxId, func, sizeof(func));
+    MboxRecv(mboxId, args, sizeof(args));
 
     /* Then sets psr to be in user mode to run the user main */
     unsigned int psr = USLOSS_PsrGet();
@@ -29,9 +29,10 @@ int spawn(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     
     //new mailboxs 
+    USLOSS_Console("sending\n");
     int mbox_id = MboxCreate(2, 50);
-    int result1 = MBoxSend(mbox_id, &args->arg1, sizeof(args->arg1));
-    int result2 = MBoxSend(mbox_id, &args->arg2, sizeof(args->arg2));
+    int result1 = MboxSend(mbox_id, &args->arg1, sizeof(args->arg1));
+    int result2 = MboxSend(mbox_id, &args->arg2, sizeof(args->arg2));
     
     // send trampolie with mailbox id
     args->arg1 = spork(args->arg5, trampoline, mbox_id, (int)(long)args->arg3, (int)(long)args->arg4);
