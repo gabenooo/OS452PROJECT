@@ -33,7 +33,8 @@ int trampoline(int mboxId) {
     USLOSS_PsrSet( psr & ~USLOSS_PSR_CURRENT_MODE );
 
     int returnCode = func(args);
-    Terminate(0);
+
+    Terminate(1);
     USLOSS_PsrSet( psr );
 
     return returnCode;
@@ -77,7 +78,7 @@ void terminate(void* arg) {
     while (join(&returnStatus) != -2) {
         /* continue to try and join until it is negative 2 */
     }
-    quit(args->arg1);
+    quit((long)args->arg1);
 }
 
 void wait(void* arg) {
@@ -130,15 +131,19 @@ void semP(void* arg) {
 
     while (semaphoreTable[(long)args->arg1].value == 0) {
         MboxRecv(semaphoreTable[(long)args->arg1].mboxId, NULL, 0);
+        //USLOSS_Console("Unblocking pid %d\n", getpid());
     }
+
     semaphoreTable[(long)args->arg1].value--;
+    //USLOSS_Console("Sem is now %d\n", semaphoreTable[(long)args->arg1].value);
 }
 
 void semV(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
 
     semaphoreTable[(long)args->arg1].value++;
-    MboxCondSend(semaphoreTable[(long)args->arg1].mboxId, NULL, 0);
+    //USLOSS_Console("Sem is now %d\n", semaphoreTable[(long)args->arg1].value);
+    MboxSend(semaphoreTable[(long)args->arg1].mboxId, NULL, 0);
 }
 
 void getTimeOfDay(void* arg) {
