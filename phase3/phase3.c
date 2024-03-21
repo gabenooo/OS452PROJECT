@@ -112,10 +112,12 @@ void semV(void* arg) {
 
 void getTimeOfDay(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+    args->arg1 = currentTime();
 }
 
 void getPid(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+    args->arg1 = getpid();
 }
 
 
