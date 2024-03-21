@@ -100,6 +100,28 @@ void wait(void* arg) {
 
 void semCreate(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
+
+    /* Finds the next semaphore id */
+    int semID = -1;
+    for (int i = 0; i < MAXSEMS; i++) {
+        if (semaphoreTable[i].ID == -1) {
+            semID = i;
+            break;
+        }
+    }
+
+
+    /* Instantiate the semaphore with the value */
+    if (semID < 0) {
+        args->arg4 = -1;
+    } else {
+        semaphoreTable[semID].ID = semID;
+        semaphoreTable[semID].value = args->arg1;
+
+        args->arg1 = semID;
+        args->arg4 = 0;
+    }
+
 }
 
 void semP(void* arg) {
