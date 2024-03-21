@@ -22,9 +22,12 @@ int trampoline(int mboxId) {
     /* Then sets psr to be in user mode to run the user main */
     unsigned int psr = USLOSS_PsrGet();
     USLOSS_PsrSet( psr & ~USLOSS_PSR_CURRENT_MODE );
+    USLOSS_Console("User mode active\n");
 
     int returnCode = func(args);
+    terminate(args);
     USLOSS_PsrSet( psr );
+    USLOSS_Console("User mode deactive\n");
 
     return returnCode;
 }
@@ -60,10 +63,7 @@ int spawn(void* arg) {
 }
 
 void terminate(void* arg) {
-    //USLOSS_Console("terminate ran\n");
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
-    int pid = getpid();
-    //USLOSS_Console("pid to terminate is %d\n", pid);
     
     int returnStatus = 0;
 
