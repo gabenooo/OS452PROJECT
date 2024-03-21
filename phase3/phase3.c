@@ -25,7 +25,7 @@ int trampoline(int mboxId) {
     USLOSS_Console("User mode active\n");
 
     int returnCode = func(args);
-    terminate(args);
+    Terminate(args);
     USLOSS_PsrSet( psr );
     USLOSS_Console("User mode deactive\n");
 
