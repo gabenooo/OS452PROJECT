@@ -74,54 +74,81 @@ int trampoline(int mboxId) {
     return returnCode;
 }
 
+/*
+ * Function:  spawn
+ * ----------------
+ * Spawns a new process.
+ * This function spawns a new process by creating a mailbox and sending
+ * the necessary function arguments to the trampoline function.
+ * 
+ * arguments:
+ *     void* arg - Pointer to the system arguments structure (USLOSS_Sysargs)
+ *         arg1: function pointer
+ *         arg2: argument to pass to the function
+ *         arg3: the stack size
+ *         arg4: priority of the new process
+ *         arg5: process name
+ * 
+ * returns:
+ *     int - 0 on success, -1 on failure
+ */
 int spawn(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     
-    //new mailboxs 
-    
+    /* Creates the mailbox and sends the function arguments needed so the trampoline can call it */
     int mbox_id = MboxCreate(2, 50);
-    //USLOSS_Console("sending on id %d\n", mbox_id);
     int result1 = MboxSend(mbox_id, &args->arg1, sizeof(args->arg1));
     int result2 = MboxSend(mbox_id, &args->arg2, sizeof(args->arg2));
     
-    // send trampolie with mailbox id
     args->arg1 = spork(args->arg5, trampoline, mbox_id, (int)(long)args->arg3, (int)(long)args->arg4);
-    
-    
-    //int test = spork(name, func, arg, stackSize, priority);
-    //printf("%d\n", pid);
-    //  If the process
-// returns, then the trampoline will automatically call Terminate() (still from
-// user mode) on behalf of this process, passing as the argument the value returned
-// from the user-main function.
-// The PID of the child is returned using an out parameter pid; the return
-// value is 0 if the child was successfully created, and -1 if not.
 
     if ((int)(long)args->arg1 < 0) {
         return -1; 
     }
     return 0;
-    
 }
 
+/*
+ * Function:  terminate
+ * --------------------
+ * Terminates the current process.
+ * This function terminates the current process by repeatedly attempting to join
+ * with child processes until the return status is -2, indicating no more children.
+ * Then, it calls the `quit` function to exit the current process with the given status.
+ * 
+ * arguments:
+ *     void* arg - Pointer to the system arguments structure (USLOSS_Sysargs)
+ *         arg1: exit status for the current process
+ * 
+ * returns:
+ *     void
+ */
 void terminate(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
     
+    /* continue to try and join until it is negative 2 */
     int returnStatus = 0;
-
-    while (join(&returnStatus) != -2) {
-        /* continue to try and join until it is negative 2 */
-    }
+    while (join(&returnStatus) != -2) { }
     quit((long)args->arg1);
 }
 
+/*
+ * Function:  wait
+ * ---------------
+ * Waits for a child process to terminate.
+ * This function waits for a child process to terminate and retrieves its
+ * process ID and return status.
+ * 
+ * arguments:
+ *     void* arg - Pointer to the system arguments structure (USLOSS_Sysargs)
+ * 
+ * returns:
+ *     void
+ */
 void wait(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
 
     int returnStatus;
-    
-    //USLOSS_Console("joining\n");
-
     int joinStatus = join(&returnStatus);
 
     /* If it joined with a child then set the pid accordingly */
@@ -133,6 +160,19 @@ void wait(void* arg) {
     }
 }
 
+/*
+ * Function:  semCreate
+ * --------------------
+ * Creates a new semaphore.
+ * This function creates a new semaphore with the specified initial value.
+ * 
+ * arguments:
+ *     void* arg - Pointer to the system arguments structure (USLOSS_Sysargs)
+ *         arg1: initial value for the semaphore
+ * 
+ * returns:
+ *     void
+ */
 void semCreate(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
 
@@ -145,7 +185,6 @@ void semCreate(void* arg) {
         }
     }
 
-
     /* Instantiate the semaphore with the value */
     if (semID < 0) {
         args->arg4 = -1;
@@ -157,46 +196,121 @@ void semCreate(void* arg) {
         args->arg1 = semID;
         args->arg4 = 0;
     }
-
 }
 
+/*
+ * Function:  semP
+ * ---------------
+ * Semaphore P operation.
+ * This function performs the "P" operation on a semaphore.
+ * It decrements the value of the semaphore and blocks the process
+ * if the semaphore value is 0, by waiting on the semaphore's mailbox.
+ * 
+ * arguments:
+ *     void* arg - Pointer to the system arguments structure (USLOSS_Sysargs)
+ * 
+ * returns:
+ *     void
+ */
 void semP(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
 
     while (semaphoreTable[(long)args->arg1].value == 0) {
-        //USLOSS_Console("Blocking pid %d\n", getpid());
         MboxRecv(semaphoreTable[(long)args->arg1].mboxId, NULL, 0);
-        //USLOSS_Console("Unblocking pid %d\n", getpid());
     }
-
     semaphoreTable[(long)args->arg1].value--;
-    //USLOSS_Console("Sem is now %d\n", semaphoreTable[(long)args->arg1].value);
 }
 
+/*
+ * Function:  semV
+ * ---------------
+ * Semaphore V operation.
+ * This function performs the "V" operation on a semaphore.
+ * It increments the value of the semaphore and performs a conditional send
+ * on the semaphore's mailbox to release a blocked process.
+ * 
+ * arguments:
+ *     void* arg - Pointer to the system arguments structure (USLOSS_Sysargs)
+ * 
+ * returns:
+ *     void
+ */
 void semV(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
 
     semaphoreTable[(long)args->arg1].value++;
-    //USLOSS_Console("Args are %d\n", (long)args->arg1);
-    //USLOSS_Console("Sem is now and sending to mbox %d, %d\n", semaphoreTable[(long)args->arg1].value, semaphoreTable[(long)args->arg1].mboxId);
-    int returnC = MboxCondSend(semaphoreTable[(long)args->arg1].mboxId, NULL, 0);
-    //USLOSS_Console("return is %d\n", returnC);
-
+    MboxCondSend(semaphoreTable[(long)args->arg1].mboxId, NULL, 0);
 }
 
+/*
+ * Function:  getTimeOfDay
+ * -----------------------
+ * Sets the current time of day in the system arguments.
+ * This function retrieves the current time of day and stores it
+ * in the system arguments structure.
+ * 
+ * arguments:
+ *     void* arg - Pointer to the system arguments structure (USLOSS_Sysargs)
+ * 
+ * returns:
+ *     void
+ */
 void getTimeOfDay(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
     args->arg1 = currentTime();
 }
 
+/*
+ * Function:  getPid
+ * -----------------
+ * Sets the process ID in the system arguments.
+ * This function retrieves the process ID of the current process
+ * and stores it in the system arguments structure.
+ * 
+ * arguments:
+ *     void* arg - Pointer to the system arguments structure (USLOSS_Sysargs)
+ * 
+ * returns:
+ *     void
+ */
 void getPid(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg; 
     args->arg1 = getpid();
 }
 
-
+/*
+ * Function:  phase3_init
+ * ----------------------
+ * Initializes semaphore table.
+ * This function iterates through the semaphore table and initializes each entry.
+ * 
+ * No arguments.
+ * 
+ * returns:
+ *     void
+ */
 void phase3_init(void){
-    
+    for (int i = 0; i < MAXSEMS; i++) {
+        semaphoreTable[i].ID = -1;
+        semaphoreTable[i].mboxId = 0;
+        semaphoreTable[i].value = 0;
+    }
+}
+
+/*
+ * Function:  phase3_start_service_processes
+ * -----------------------------------------
+ * Initializes system call vector with the appropriate service functions.
+ * This function assigns various system calls to their corresponding service functions.
+ * 
+ * This is typically called at the start of phase 3.
+ * 
+ * No arguments.
+ * 
+ * returns:
+ *     void
+ */
+void phase3_start_service_processes(void){
     systemCallVec[SYS_TERMINATE] = terminate;
     systemCallVec[SYS_WAIT] = wait;
     systemCallVec[SYS_SPAWN] = spawn;
@@ -205,16 +319,6 @@ void phase3_init(void){
     systemCallVec[SYS_SEMV] = semV;
     systemCallVec[SYS_GETTIMEOFDAY] = getTimeOfDay;
     systemCallVec[SYS_GETPID] = getPid;
-
-    for (int i = 0; i < MAXSEMS; i++) {
-        semaphoreTable[i].ID = -1;
-        semaphoreTable[i].mboxId = 0;
-        semaphoreTable[i].value = 0;
-    }
-}
-
-void phase3_start_service_processes(void){
-    
 }
 
 
