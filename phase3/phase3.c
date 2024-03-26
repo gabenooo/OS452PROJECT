@@ -6,16 +6,50 @@
 #include <stdio.h>
 #include <string.h>
 #include <phase1.h>
+/*
+ * File: phase3.c
+ * Authors: Kyle Elison, Gabe Noriega
+ * Class: CSC 452 Russ Lewis
+ *
+ * Purpose: the purpose of this code is to implement mechanisms to support
+ *  user mode processes, specifically system calls.
+ */
 
+
+/*
+ * Struct Semaphore
+ * ---------------
+ * this is a struct that represents a semaphore, has ID, mboxId, and semaphore value. To track these we put them in the semaphoreTable
+ * 
+ *  feilds:
+ *  Id - the unique ID
+ *  mboxId - the id of the mailbox the semaphore uses
+ *  value - the value of the semaphore
+ */
 struct Semaphore {
     int ID;
     int mboxId;
     int value;
 };
-
+/*
+ * array semaphoreTable
+ * ---------------
+ * this array holds the Semaphores
+ */
 struct Semaphore semaphoreTable[MAXSEMS];
 
-
+/*
+ * Function:  trampoline
+ * --------------------
+ * this function is the function to haldle when the proccess main gets called
+ * we want the function to run in user mode, so we have this wrapper function that 
+ * sets the proccess in user mode, and then calls the actual main funciton.
+ * we utilize a mailbox for this funtion
+ * 
+ * arguments:
+ * int mboxID - the mailbox id where the function pointer and arguments are stored
+ * 
+ */
 int trampoline(int mboxId) {
     //USLOSS_Console("Trampoline called with mailbox id of %d\n", mboxId);
     /* Recieves the function pointer and arguments from the given mailbox */
