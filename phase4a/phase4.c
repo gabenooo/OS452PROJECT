@@ -21,11 +21,8 @@ struct sleepItem* sleepQueue;
 void clock() {
     USLOSS_Console("clock called\n");
     while (1 == 1) {
-        
         int status;
-        int size;
-        MboxRecv(CLOCK, &status, size);
-        USLOSS_Console("recieved\n");
+        waitDevice(CLOCK, 0, &status);
 
         /* Unblock each process that is ready to be unblocked*/
         if (sleepQueue != NULL) {
@@ -47,7 +44,7 @@ void clock() {
 void sleep(void* arg){
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
 
-    int pid = curpid();
+    int pid = getpid();
     int mboxID = MboxCreate(0, 0);
 
     sleepItems[pid].mboxId = mboxID;
