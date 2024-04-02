@@ -19,7 +19,7 @@ struct sleepItem* sleepQueue;
 
 
 void clock() {
-    USLOSS_Console("clock called\n");
+    //USLOSS_Console("clock called\n");
     while (1 == 1) {
         int status;
         waitDevice(CLOCK, 0, &status);
@@ -28,7 +28,7 @@ void clock() {
         if (sleepQueue != NULL) {
             struct sleepItem* cur = sleepQueue;
             while (cur != NULL ) {
-                if (currentTime() >= cur->wakeupTime ) {
+                if (currentTime() > cur->wakeupTime ) {
                     MboxSend( cur->mboxId, NULL, 0);
                     cur = cur->next;
                     sleepQueue = cur;
@@ -38,7 +38,6 @@ void clock() {
             }
         }
     }
-    
 }
 
 
@@ -49,6 +48,9 @@ void sleep(void* arg){
 
     int pid = getpid();
     int mboxID = MboxCreate(0, 0);
+
+    int curTime = currentTime();
+    //USLOSS_Console("time is %d, end time is %d\n", curTime, (curTime + ((int)args->arg1 * 1000000)));
 
     sleepItems[pid].mboxId = mboxID;
     sleepItems[pid].wakeupTime = (currentTime() + ((int)args->arg1 * 100000));
@@ -62,7 +64,7 @@ void sleep(void* arg){
         if (sleepItems[pid].wakeupTime < cur->wakeupTime) {
             sleepItems[pid].next = cur;
             sleepQueue = &sleepItems[pid];
-        } else{
+        } else {
             /* Otherwise insert where it belongs in the queue */
             while (cur->next != NULL) {
                 if (sleepItems[pid].wakeupTime < cur->next->wakeupTime ) {
@@ -76,7 +78,6 @@ void sleep(void* arg){
             if (cur->next == NULL) {
                 cur->next = &sleepItems[pid];
             }
-
         }
     }
 
