@@ -28,7 +28,7 @@ void clock() {
         if (sleepQueue != NULL) {
             struct sleepItem* cur = sleepQueue;
             while (cur != NULL ) {
-                if (currentTime() > cur->wakeupTime ) {
+                if (currentTime() >= cur->wakeupTime ) {
                     MboxSend( cur->mboxId, NULL, 0);
                     cur = cur->next;
                     sleepQueue = cur;
