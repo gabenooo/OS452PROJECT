@@ -42,6 +42,8 @@ void clock() {
 
 
 void sleep(void* arg){
+    USLOSS_Console("sleep called\n");
+
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
 
     int pid = getpid();
@@ -83,16 +85,14 @@ void sleep(void* arg){
 
 void phase4_init(void){
     for (int i = 0; i < MAXPROC; i++) {
-        sleepQueue[i].mboxId = 0;
-        sleepQueue[i].wakeupTime = 0;
-        sleepQueue[i].next = NULL;
+        sleepItems[i].mboxId = 0;
+        sleepItems[i].wakeupTime = 0;
+        sleepItems[i].next = NULL;
     }
-    return;
 }
 
 void phase4_start_service_processes(void){
     systemCallVec[SYS_SLEEP] = sleep;
-    //systemCallVec[CLOCK] = sleep;
     spork("ClockD", clock, NULL, USLOSS_MIN_STACK, 1);
     
 }
