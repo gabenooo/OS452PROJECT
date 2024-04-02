@@ -6,3 +6,5 @@ phase2/.vscode/settings.json
 phase2/Makefile
 phase3/Makefile
 phase3/usloss
+phase4a/Makefile
+phase4a/usloss
