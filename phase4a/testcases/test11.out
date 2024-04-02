@@ -1,0 +1,2 @@
+start4(): Testing disk 0
+nullsys(): Program called an unimplemented syscall.  syscall no: 14   PSR: 0x09

@@ -1,0 +1,9 @@
+start4(): Spawn two children. Child1 writes one line to terminal 1. Child2 reads one line from terminal 1.
+Child2(): read 40 characters from terminal 1
+Child2(): read 'one: first line   (shortest first line)
+'
+Child2(): Terminating
+Child1(): Terminating
+start4(): done.
+----- term1.out -----
+A Something interesting to print here...

@@ -1,0 +1,13 @@
+start4(): Spawning 5 children to sleep
+ChildS(0): Sleeping for 5 seconds
+ChildS(1): Sleeping for 4 seconds
+ChildS(2): Sleeping for 3 seconds
+ChildS(3): Sleeping for 2 seconds
+ChildS(4): Sleeping for 1 seconds
+start4(): Spawning 2 children to termfuncs
+ChildTR(): start
+start4(): Spawning 4 children to diskfuncs
+ChildDW0(): writing to disk 0, track 5, sector 0
+nullsys(): Program called an unimplemented syscall.  syscall no: 14   PSR: 0x09
+----- term0.out -----
+C

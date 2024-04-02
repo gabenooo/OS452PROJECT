@@ -1,0 +1,5 @@
+start4(): disk scheduling test, 8 children
+          algorithm test           
+          different tracks
+going to write track 5
+nullsys(): Program called an unimplemented syscall.  syscall no: 14   PSR: 0x09

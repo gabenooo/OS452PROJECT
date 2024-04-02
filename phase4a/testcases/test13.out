@@ -1,0 +1,4 @@
+start4(): Writing data to 3 disk sectors, wrapping to next track
+
+start4(): Disk 0:
+nullsys(): Program called an unimplemented syscall.  syscall no: 14   PSR: 0x09

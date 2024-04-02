@@ -1,0 +1,2 @@
+start4(): started
+nullsys(): Program called an unimplemented syscall.  syscall no: 15   PSR: 0x09

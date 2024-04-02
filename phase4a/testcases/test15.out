@@ -1,0 +1,2 @@
+start4(): Attempting some invalid writes.  If they are all rejected (as expected), then you will not see anything more before 'done'
+nullsys(): Program called an unimplemented syscall.  syscall no: 14   PSR: 0x09
