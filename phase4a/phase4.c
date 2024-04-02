@@ -83,9 +83,9 @@ void sleep(void* arg){
 
 void phase4_init(void){
     for (int i = 0; i < MAXPROC; i++) {
-        sleepQueue[i].mboxId = 0;
-        sleepQueue[i].wakeupTime = 0;
-        sleepQueue[i].next = NULL;
+        sleepitems[i].mboxId = 0;
+        sleepitems[i].wakeupTime = 0;
+        sleepitems[i].next = NULL;
     }
     return;
 }
