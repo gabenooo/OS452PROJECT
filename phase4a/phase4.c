@@ -28,9 +28,10 @@ void clock() {
         if (sleepQueue != NULL) {
             struct sleepItem* cur = sleepQueue;
             while (cur != NULL ) {
-                if (currentTime() >= sleepQueue->wakeupTime ) {
+                if (currentTime() >= cur->wakeupTime ) {
                     MboxSend( cur->mboxId, NULL, 0);
                     cur = cur->next;
+                    sleepQueue = cur;
                 } else {
                     break;
                 }
@@ -42,7 +43,7 @@ void clock() {
 
 
 void sleep(void* arg){
-    USLOSS_Console("sleep called\n");
+    //USLOSS_Console("sleep called\n");
 
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
 
@@ -50,7 +51,7 @@ void sleep(void* arg){
     int mboxID = MboxCreate(0, 0);
 
     sleepItems[pid].mboxId = mboxID;
-    sleepItems[pid].wakeupTime = (currentTime() + ((int)args->arg1 * 1000000));
+    sleepItems[pid].wakeupTime = (currentTime() + ((int)args->arg1 * 100000));
 
     /* First checks if queue is currently null */
     if (sleepQueue == NULL) {
@@ -61,19 +62,21 @@ void sleep(void* arg){
         if (sleepItems[pid].wakeupTime < cur->wakeupTime) {
             sleepItems[pid].next = cur;
             sleepQueue = &sleepItems[pid];
-        }
-        /* Otherwise insert where it belongs in the queue */
-        while (cur->next != NULL) {
-            if (sleepItems[pid].wakeupTime < cur->next->wakeupTime ) {
-                sleepItems[pid].next = cur->next;
+        } else{
+            /* Otherwise insert where it belongs in the queue */
+            while (cur->next != NULL) {
+                if (sleepItems[pid].wakeupTime < cur->next->wakeupTime ) {
+                    sleepItems[pid].next = cur->next;
+                    cur->next = &sleepItems[pid];
+                    break;
+                } 
+                cur = cur->next;
+            }
+            /* If no position found then add to the end of the queue */
+            if (cur->next == NULL) {
                 cur->next = &sleepItems[pid];
-                break;
-            } 
-            cur = cur->next;
-        }
-        /* If no position found then add to the end of the queue */
-        if (cur->next == NULL) {
-            cur->next = &sleepItems[pid];
+            }
+
         }
     }
 
