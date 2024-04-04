@@ -28,7 +28,7 @@ void clock() {
         if (sleepQueue != NULL) {
             struct sleepItem* cur = sleepQueue;
             while (cur != NULL ) {
-                if (currentTime() >= cur->wakeupTime ) {
+                if (currentTime() > cur->wakeupTime ) {
                     MboxSend( cur->mboxId, NULL, 0);
                     cur = cur->next;
                     sleepQueue = cur;
@@ -53,7 +53,7 @@ void sleep(void* arg){
     //USLOSS_Console("time is %d, end time is %d\n", curTime, (curTime + ((int)args->arg1 * 1000000)));
 
     sleepItems[pid].mboxId = mboxID;
-    sleepItems[pid].wakeupTime = (currentTime() + ((int)args->arg1 * 100000));
+    sleepItems[pid].wakeupTime = (currentTime() + ((int)args->arg1 * 1000000));
 
     /* First checks if queue is currently null */
     if (sleepQueue == NULL) {
