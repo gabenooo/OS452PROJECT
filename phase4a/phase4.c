@@ -104,37 +104,17 @@ void sleep(void* arg){
     return;
 }
 
-void term1d(){
+void termd(char* arg){
+    int termNum =  atoi(arg);
+    USLOSS_Console("termNum is %d\n", termNum);
+
     while (1 == 1) {
         int status;
-        waitDevice(1, 0, &status);
+        waitDevice(USLOSS_TERM_DEV, termNum, &status);
+        USLOSS_Console("terminal interupt\n");
 
     }
 
-}
-void term2d(){
-    while (1 == 1) {
-        int status;
-        waitDevice(1, 0, &status);
-
-    }
-    
-}
-void term3d(){
-    while (1 == 1) {
-        int status;
-        waitDevice(1, 0, &status);
-
-    }
-    
-}
-void term4d(){
-    while (1 == 1) {
-        int status;
-        waitDevice(1, 0, &status);
-
-    }
-    
 }
 
 void phase4_init(void){
@@ -156,10 +136,9 @@ void phase4_start_service_processes(void){
     systemCallVec[SYS_TERMWRITE] = termWrite;
     spork("ClockD", clock, NULL, USLOSS_MIN_STACK, 1);
 
-    spork("Term1D", term1d, NULL, USLOSS_MIN_STACK, 1);
-    spork("Term2D", term2d, NULL, USLOSS_MIN_STACK, 1);
-    spork("Term3D", term3d, NULL, USLOSS_MIN_STACK, 1);
-    spork("Term4D", term4d, NULL, USLOSS_MIN_STACK, 1);
-
+    spork("Term1D", termd, "0", USLOSS_MIN_STACK, 1);
+    spork("Term2D", termd, "1", USLOSS_MIN_STACK, 1);
+    spork("Term3D", termd, "2", USLOSS_MIN_STACK, 1);
+    spork("Term4D", termd, "3", USLOSS_MIN_STACK, 1);
     
 }
