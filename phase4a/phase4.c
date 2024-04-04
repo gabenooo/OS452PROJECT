@@ -17,6 +17,14 @@ struct sleepItem {
 struct sleepItem sleepItems[MAXPROC];
 struct sleepItem* sleepQueue;
 
+void termRead(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+}
+
+void termWrite(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+}
+
 
 void clock() {
     //USLOSS_Console("clock called\n");
@@ -97,6 +105,8 @@ void phase4_init(void){
 
 void phase4_start_service_processes(void){
     systemCallVec[SYS_SLEEP] = sleep;
+    systemCallVec[SYS_TERMREAD] = termRead;
+    systemCallVec[SYS_TERMWRITE] = termWrite;
     spork("ClockD", clock, NULL, USLOSS_MIN_STACK, 1);
     
 }
