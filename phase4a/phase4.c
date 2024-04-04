@@ -133,14 +133,26 @@ void termd(char* arg){
 
     while (1 == 1) {
         int status;
-        waitDevice(USLOSS_TERM_DEV, termNum, &status);
-        USLOSS_Console("terminal interupt\n");
+        waitDevice(1, termNum, &status);
+        if ( status == 0){
+            copy over a char
+            int unit = termNum;
+            void * Globalbuffer;
+            int cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
+            cr_val |= 0x2; // recv int enable
+            cr_val |= 0x4; // xmit int enable
+            cr_val |= (buf[i] << 8); // the character to send
+            USLOSS_DeviceOutput(USLOSS_TERM_DEV, unit, (void*)(long)cr_val);
+        } else if ( status == write){
+            write to buffer
+        }
+        int status;
 
     }
 
 }
 
-void phase4_init(void){
+void phase4_init(void){ 
     for (int i = 0; i < MAXPROC; i++) {
         sleepItems[i].mboxId = 0;
         sleepItems[i].wakeupTime = 0;
