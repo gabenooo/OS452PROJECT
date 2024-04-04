@@ -33,12 +33,17 @@ void termRead(void* arg) {
     long bufferSize = args->arg2;
     long unitID = args->arg3;
 
+    int status;
+
+    USLOSS_DeviceInput(USLOSS_TERM_DEV, unitID, &status);
+
+    USLOSS_Console("status of read is %d\n", status);
+    
+
     switch (unitID){
-        case 1:
-            
+        case 1:          
             break;
         case 2:
-
             break;
         case 3:
             break;
@@ -49,12 +54,13 @@ void termRead(void* arg) {
 
     }
     long numsToRead = -1;
-    args.arg2 = numsToRead;
+    args->arg2 = numsToRead;
 
 }
 
 void termWrite(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+    USLOSS_Console("Write called\n");
 }
 
 
@@ -129,7 +135,6 @@ void sleep(void* arg){
 
 void termd(char* arg){
     int termNum =  atoi(arg);
-    USLOSS_Console("termNum is %d\n", termNum);
 
     while (1 == 1) {
         int status;
@@ -175,5 +180,11 @@ void phase4_start_service_processes(void){
     spork("Term2D", termd, "1", USLOSS_MIN_STACK, 1);
     spork("Term3D", termd, "2", USLOSS_MIN_STACK, 1);
     spork("Term4D", termd, "3", USLOSS_MIN_STACK, 1);
+
+    int ctrReg = 0x6;
+    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 0, (void*)(long)ctrReg);
+    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 1, (void*)(long)ctrReg);
+    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 2, (void*)(long)ctrReg);
+    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 3, (void*)(long)ctrReg);
     
 }
