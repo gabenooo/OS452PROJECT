@@ -28,6 +28,29 @@ struct sleepItem* sleepQueue;
 
 void termRead(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+    // CHECKMODE;
+    void * buffer = args->arg1;
+    long bufferSize = args->arg2;
+    long unitID = args->arg3;
+
+    switch (unitID){
+        case 1:
+            
+            break;
+        case 2:
+
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        default:
+            break;
+
+    }
+    long numsToRead = -1;
+    args.arg2 = numsToRead;
+
 }
 
 void termWrite(void* arg) {
