@@ -8,6 +8,14 @@
 
 int CLOCK = 0;
 
+
+
+int term1Mut = -1;
+int term2Mut = -1;
+int term3Mut = -1;
+int term4Mut = -1;
+
+
 struct sleepItem {
     int mboxId;
     int wakeupTime;
@@ -16,6 +24,7 @@ struct sleepItem {
 
 struct sleepItem sleepItems[MAXPROC];
 struct sleepItem* sleepQueue;
+
 
 void termRead(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
@@ -95,6 +104,39 @@ void sleep(void* arg){
     return;
 }
 
+void term1d(){
+    while (1 == 1) {
+        int status;
+        waitDevice(1, 0, &status);
+
+    }
+
+}
+void term2d(){
+    while (1 == 1) {
+        int status;
+        waitDevice(1, 0, &status);
+
+    }
+    
+}
+void term3d(){
+    while (1 == 1) {
+        int status;
+        waitDevice(1, 0, &status);
+
+    }
+    
+}
+void term4d(){
+    while (1 == 1) {
+        int status;
+        waitDevice(1, 0, &status);
+
+    }
+    
+}
+
 void phase4_init(void){
     for (int i = 0; i < MAXPROC; i++) {
         sleepItems[i].mboxId = 0;
@@ -104,9 +146,20 @@ void phase4_init(void){
 }
 
 void phase4_start_service_processes(void){
+    term1Mut = MboxCreate(0, 0);
+    term2Mut = MboxCreate(0, 0);
+    term3Mut = MboxCreate(0, 0);
+    term4Mut = MboxCreate(0, 0);
+
     systemCallVec[SYS_SLEEP] = sleep;
     systemCallVec[SYS_TERMREAD] = termRead;
     systemCallVec[SYS_TERMWRITE] = termWrite;
     spork("ClockD", clock, NULL, USLOSS_MIN_STACK, 1);
+
+    spork("Term1D", term1d, NULL, USLOSS_MIN_STACK, 1);
+    spork("Term2D", term2d, NULL, USLOSS_MIN_STACK, 1);
+    spork("Term3D", term3d, NULL, USLOSS_MIN_STACK, 1);
+    spork("Term4D", term4d, NULL, USLOSS_MIN_STACK, 1);
+
     
 }
