@@ -10,10 +10,7 @@ int CLOCK = 0;
 
 
 
-int term0Mut = -1;
-int term1Mut = -1;
-int term2Mut = -1;
-int term3Mut = -1;
+int termMut[4];
 int termSender[4];
 
 int termRecvMbox[4];
@@ -73,46 +70,13 @@ void termWrite(void* arg) {
 
     // *numCharsWritten = (long) sysArg.arg2;
     // return (long) sysArg.arg4;
-    switch (unitID){
-        case 0:  
-            // gain lock
-            MboxSend(term0Mut, NULL, NULL);
-            for (int c = 0 ; c < bufferSize; c++){
-                char* toSend = &buffer[c];
-                MboxCondSend(termSender[0], toSend,1);
-            }
-            MboxRecv(term0Mut, NULL, NULL);
 
-            break;
-        case 1:
-            MboxSend(term1Mut, NULL, NULL);
-            for (int c = 0 ; c < bufferSize; c++){
-                char* toSend = &buffer[c];
-                MboxCondSend(termSender[1], toSend,1);
-            }
-            MboxRecv(term1Mut, NULL, NULL);
-            break;
-        case 2:
-            MboxSend(term2Mut, NULL, NULL);
-            for (int c = 0 ; c < bufferSize; c++){
-                char* toSend = &buffer[c];
-                MboxCondSend(termSender[2], toSend,1);
-            }
-            MboxRecv(term2Mut, NULL, NULL);
-            break;
-        case 3:
-            MboxSend(term3Mut, NULL, NULL);
-            for (int c = 0 ; c < bufferSize; c++){
-                char* toSend = &buffer[c];
-                MboxCondSend(termSender[3], toSend,1);
-            }
-            MboxRecv(term3Mut, NULL, NULL);
-            break;
-        default:
-            break;
-
+    MboxSend(termMut[unitID], NULL, NULL);
+    for (int c = 0 ; c < bufferSize; c++){
+        char* toSend = &buffer[c];
+        MboxCondSend(termSender[unitID], toSend,1);
     }
-
+    MboxRecv(termMut[unitID], NULL, NULL);
     
 }
 
@@ -214,6 +178,7 @@ void termd(char* arg){
 
         /* We are ready to send a character */
         if (xmitStatus == 1) {
+            USLOSS_Console("ready to xmit\n");
             char toSend;
             int cr_val;
             MboxRecv(termSender[termNum], toSend,1);
@@ -239,10 +204,10 @@ void phase4_init(void){
 }
 
 void phase4_start_service_processes(void){
-    term0Mut = MboxCreate(0, 0);
-    term1Mut = MboxCreate(0, 0);
-    term2Mut = MboxCreate(0, 0);
-    term3Mut = MboxCreate(0, 0);
+    termMut[0] = MboxCreate(0, 0);
+    termMut[1] = MboxCreate(0, 0);
+    termMut[2] = MboxCreate(0, 0);
+    termMut[3] = MboxCreate(0, 0);
     termSender[0] = MboxCreate(1, 1);
     termSender[1] = MboxCreate(1, 1);
     termSender[2] = MboxCreate(1, 1);
