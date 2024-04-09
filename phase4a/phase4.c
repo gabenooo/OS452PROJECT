@@ -79,8 +79,8 @@ void termWrite(void* arg) {
 
     for (int c = 0 ; c < bufferSize; c++){
         char* toSend = &buffer[c];
-        USLOSS_Console("sending message\n");
-        MboxCondSend(termSender[unitID], toSend,1);
+        //USLOSS_Console("sending message\n");
+        MboxSend(termSender[unitID], toSend,1);
     }
     MboxRecv(termMut[unitID], NULL, NULL);
     // *numCharsWritten = (long) sysArg.arg2;
@@ -169,7 +169,7 @@ void termd(char* arg){
         int xmitStatus = USLOSS_TERM_STAT_XMIT(status);
 
         /* We are ready to recieve a character */
-        if (recvStatus == 1) {
+        if (recvStatus == USLOSS_DEV_BUSY) {
             char readChar = USLOSS_TERM_STAT_CHAR(status);
             size_t len = strlen(buffers[termNum]);
             buffers[termNum][len] = readChar;
@@ -185,16 +185,19 @@ void termd(char* arg){
         }
 
         /* We are ready to send a character */
-        if (xmitStatus == 1) {
-            USLOSS_Console("ready to xmit\n");
-            char toSend;
+        if (xmitStatus == USLOSS_DEV_READY) {
+            char toSend[1];
             int cr_val;
-            MboxRecv(termSender[termNum], toSend,1);
-            cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
-            cr_val |= 0x2; // recv int enable
-            cr_val |= 0x4; // xmit int enable
-            cr_val |= (toSend << 8); // the character to send
-            USLOSS_DeviceOutput(USLOSS_TERM_DEV, termNum, (void*)(long)cr_val);
+            int xmitRecStatus = MboxCondRecv(termSender[termNum], toSend,1);
+            
+            if (xmitRecStatus >= 0) {
+                USLOSS_Console("Status is %d, character is %c\n", xmitRecStatus, toSend[0]);
+                cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
+                cr_val |= 0x2; // recv int enable
+                cr_val |= 0x4; //t enable/ xmit in
+                cr_val |= (toSend[0] << 8); // the character to send
+                USLOSS_DeviceOutput(USLOSS_TERM_DEV, termNum, (void*)(long)cr_val);
+            }
         }
     }
 }
