@@ -15,6 +15,10 @@ int term2Mut = -1;
 int term3Mut = -1;
 int term4Mut = -1;
 
+int termRecvMbox[4];
+
+char buffers[4][MAXLINE + 1];
+
 
 struct sleepItem {
     int mboxId;
@@ -33,29 +37,28 @@ void termRead(void* arg) {
     long bufferSize = args->arg2;
     long unitID = args->arg3;
 
-    int status;
-    USLOSS_Console("Calling read\n");
-
-    //USLOSS_DeviceInput(USLOSS_TERM_DEV, unitID, &status);
-
-    //USLOSS_Console("status of read is %d\n", status);
-    
-
-    switch (unitID){
-        case 1:          
-            break;
-        case 2:
-            break;
-        case 3:
-            break;
-        case 4:
-            break;
-        default:
-            break;
-
+    /* Error Checking */
+    if (bufferSize <= 0 || unitID < 0 || unitID > 3) {
+        args->arg4 = -1;
+        return;
     }
-    long numsToRead = -1;
-    args->arg2 = numsToRead;
+
+    char fullBuffer[MAXLINE];
+    memset(fullBuffer, '\0', MAXLINE);
+
+    int status = MboxRecv(termRecvMbox[unitID], fullBuffer, MAXLINE+1);
+    strncpy(buffer, fullBuffer, bufferSize);
+
+    //USLOSS_Console("Status code is %d, recived on %d, Recieved string %s\n", status, termRecvMbox[unitID], fullBuffer);
+
+    /* Set the out parameters */
+    int actualLen = strlen(buffer);
+    if (actualLen < bufferSize) {
+        args->arg2 = actualLen;
+    } else {
+        args->arg2 = bufferSize;
+    }
+    args->arg4 = 0;
 
 }
 
@@ -147,7 +150,20 @@ void termd(char* arg){
         /* We are ready to recieve a character */
         if (recvStatus == 1) {
             char readChar = USLOSS_TERM_STAT_CHAR(status);
-            USLOSS_Console("%c", readChar);
+            size_t len = strlen(buffers[termNum]);
+            buffers[termNum][len] = readChar;
+            buffers[termNum][len + 1] = '\0';
+
+            /* Checks if buffer is full or newline encounterd */
+            if (len + 1 >= MAXLINE || readChar == '\n') {
+                //USLOSS_Console("%s\n", buffers[termNum]);
+                int mboxstatus = MboxCondSend(termRecvMbox[termNum], buffers[termNum], len+1);
+                //USLOSS_Console("mbox status is %d on mbox %d, string is send is %s\n", mboxstatus, termRecvMbox[termNum], buffers[termNum]);
+
+                resetBuffer(termNum);
+            }
+
+            
         }
 
         /* We are ready to send a character */
@@ -155,10 +171,9 @@ void termd(char* arg){
 
         }
 
-        //USLOSS_Console("terminal interupt recv=%d xmit=%d\n", recvStatus, xmitStatus);
+        //USLOSS_Console("terminal interupt recv=%d xmit=%d\n", recvStatus,    term1Recv = MboxCreate(10, MAXLINE);
 
     }
-
 }
 
 void phase4_init(void){
@@ -167,6 +182,10 @@ void phase4_init(void){
         sleepItems[i].wakeupTime = 0;
         sleepItems[i].next = NULL;
     }
+
+    for (int i = 0; i < 4; i++) {
+        resetBuffer(i);
+    }
 }
 
 void phase4_start_service_processes(void){
@@ -174,6 +193,11 @@ void phase4_start_service_processes(void){
     term2Mut = MboxCreate(0, 0);
     term3Mut = MboxCreate(0, 0);
     term4Mut = MboxCreate(0, 0);
+
+    termRecvMbox[0] = MboxCreate(10, MAXLINE+1);
+    termRecvMbox[1] = MboxCreate(10, MAXLINE+1);
+    termRecvMbox[2] = MboxCreate(10, MAXLINE+1);
+    termRecvMbox[3] = MboxCreate(10, MAXLINE+1);
 
     systemCallVec[SYS_SLEEP] = sleep;
     systemCallVec[SYS_TERMREAD] = termRead;
@@ -191,4 +215,10 @@ void phase4_start_service_processes(void){
     USLOSS_DeviceOutput(USLOSS_TERM_DEV, 2, ctrReg);
     USLOSS_DeviceOutput(USLOSS_TERM_DEV, 3, ctrReg);
     
+}
+
+void resetBuffer(int bufferToReset) {
+    for (int i = 0; i < MAXLINE + 1; i++) {
+            buffers[bufferToReset][i] = '\0';
+    }
 }
