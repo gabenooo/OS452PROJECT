@@ -36,9 +36,9 @@ void termRead(void* arg) {
     int status;
     USLOSS_Console("Calling read\n");
 
-    USLOSS_DeviceInput(USLOSS_TERM_DEV, unitID, &status);
+    //USLOSS_DeviceInput(USLOSS_TERM_DEV, unitID, &status);
 
-    USLOSS_Console("status of read is %d\n", status);
+    //USLOSS_Console("status of read is %d\n", status);
     
 
     switch (unitID){
@@ -140,7 +140,22 @@ void termd(char* arg){
     while (1 == 1) {
         int status;
         waitDevice(USLOSS_TERM_DEV, termNum, &status);
-        USLOSS_Console("terminal interupt\n");
+
+        int recvStatus = USLOSS_TERM_STAT_RECV(status);
+        int xmitStatus = USLOSS_TERM_STAT_XMIT(status);
+
+        /* We are ready to recieve a character */
+        if (recvStatus == 1) {
+            char readChar = USLOSS_TERM_STAT_CHAR(status);
+            USLOSS_Console("%c", readChar);
+        }
+
+        /* We are ready to send a character */
+        if (xmitStatus == 1) {
+
+        }
+
+        //USLOSS_Console("terminal interupt recv=%d xmit=%d\n", recvStatus, xmitStatus);
 
     }
 
