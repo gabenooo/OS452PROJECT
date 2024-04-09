@@ -68,9 +68,18 @@ void termWrite(void* arg) {
     long bufferSize = args->arg2;
     long unitID = args->arg3;
 
+    // *numCharsWritten = (long) sysArg.arg2;
+    // return (long) sysArg.arg4;
+
+    USLOSS_Console("getting the lock\n");
+
     MboxSend(termMut[unitID], NULL, NULL);
+
+    USLOSS_Console("lock retrieved\n");
+
     for (int c = 0 ; c < bufferSize; c++){
         char* toSend = &buffer[c];
+        USLOSS_Console("sending message\n");
         MboxCondSend(termSender[unitID], toSend,1);
     }
     MboxRecv(termMut[unitID], NULL, NULL);
@@ -203,10 +212,10 @@ void phase4_init(void){
 }
 
 void phase4_start_service_processes(void){
-    termMut[0] = MboxCreate(0, 0);
-    termMut[1] = MboxCreate(0, 0);
-    termMut[2] = MboxCreate(0, 0);
-    termMut[3] = MboxCreate(0, 0);
+    termMut[0] = MboxCreate(1, 0);
+    termMut[1] = MboxCreate(1, 0);
+    termMut[2] = MboxCreate(1, 0);
+    termMut[3] = MboxCreate(1, 0);
     termSender[0] = MboxCreate(1, 1);
     termSender[1] = MboxCreate(1, 1);
     termSender[2] = MboxCreate(1, 1);
