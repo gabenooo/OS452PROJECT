@@ -34,6 +34,7 @@ void termRead(void* arg) {
     long unitID = args->arg3;
 
     int status;
+    USLOSS_Console("Calling read\n");
 
     USLOSS_DeviceInput(USLOSS_TERM_DEV, unitID, &status);
 
@@ -182,9 +183,9 @@ void phase4_start_service_processes(void){
     spork("Term4D", termd, "3", USLOSS_MIN_STACK, 1);
 
     int ctrReg = 0x6;
-    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 0, (void*)(long)ctrReg);
-    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 1, (void*)(long)ctrReg);
-    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 2, (void*)(long)ctrReg);
-    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 3, (void*)(long)ctrReg);
+    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 0, ctrReg);
+    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 1, ctrReg);
+    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 2, ctrReg);
+    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 3, ctrReg);
     
 }
