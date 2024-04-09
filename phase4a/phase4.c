@@ -73,9 +73,6 @@ void termWrite(void* arg) {
     void * buffer = args->arg1;
     long bufferSize = args->arg2;
     long unitID = args->arg3;
-
-    // *numCharsWritten = (long) sysArg.arg2;
-    // return (long) sysArg.arg4;
     switch (unitID){
         case 0:  
             // gain lock
@@ -116,8 +113,8 @@ void termWrite(void* arg) {
 
     }
 
-    // call wait dev
-    // send chars
+    // *numCharsWritten = (long) sysArg.arg2;
+    args->arg4 = 0;
     
 }
 
