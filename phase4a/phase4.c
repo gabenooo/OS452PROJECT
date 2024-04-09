@@ -14,10 +14,7 @@ int term0Mut = -1;
 int term1Mut = -1;
 int term2Mut = -1;
 int term3Mut = -1;
-int term0Sender = -1;
-int term1Sender = -1;
-int term2Sender = -1;
-int term3Sender = -1;
+int termSender[4];
 
 int termRecvMbox[4];
 
@@ -79,7 +76,7 @@ void termWrite(void* arg) {
             MboxSend(term0Mut, NULL, NULL);
             for (int c = 0 ; c < bufferSize; c++){
                 char* toSend = &buffer[c];
-                MboxCondSend(term0Sender, toSend,1);
+                MboxCondSend(termSender[0], toSend,1);
             }
             MboxRecv(term0Mut, NULL, NULL);
 
@@ -88,7 +85,7 @@ void termWrite(void* arg) {
             MboxSend(term1Mut, NULL, NULL);
             for (int c = 0 ; c < bufferSize; c++){
                 char* toSend = &buffer[c];
-                MboxCondSend(term1Sender, toSend,1);
+                MboxCondSend(termSender[1], toSend,1);
             }
             MboxRecv(term1Mut, NULL, NULL);
             break;
@@ -96,7 +93,7 @@ void termWrite(void* arg) {
             MboxSend(term2Mut, NULL, NULL);
             for (int c = 0 ; c < bufferSize; c++){
                 char* toSend = &buffer[c];
-                MboxCondSend(term2Sender, toSend,1);
+                MboxCondSend(termSender[2], toSend,1);
             }
             MboxRecv(term2Mut, NULL, NULL);
             break;
@@ -104,7 +101,7 @@ void termWrite(void* arg) {
             MboxSend(term3Mut, NULL, NULL);
             for (int c = 0 ; c < bufferSize; c++){
                 char* toSend = &buffer[c];
-                MboxCondSend(term3Sender, toSend,1);
+                MboxCondSend(termSender[3], toSend,1);
             }
             MboxRecv(term3Mut, NULL, NULL);
             break;
@@ -210,57 +207,21 @@ void termd(char* arg){
                 //USLOSS_Console("%s\n", buffers[termNum]);
                 int mboxstatus = MboxCondSend(termRecvMbox[termNum], buffers[termNum], len+1);
                 //USLOSS_Console("mbox status is %d on mbox %d, string is send is %s\n", mboxstatus, termRecvMbox[termNum], buffers[termNum]);
-
                 resetBuffer(termNum);
             }
-
-            
         }
 
         /* We are ready to send a character */
         if (xmitStatus == 1) {
             char toSend;
             int cr_val;
-            switch (termNum){
-                case 0: 
-                    MboxRecv(term0Sender, toSend,1);
-                    cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
-                    cr_val |= 0x2; // recv int enable
-                    cr_val |= 0x4; // xmit int enable
-                    cr_val |= (toSend << 8); // the character to send
-                    USLOSS_DeviceOutput(USLOSS_TERM_DEV, termNum, (void*)(long)cr_val);
-                    break;
-                case 1:
-                    MboxRecv(term1Sender, toSend,1);
-                    cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
-                    cr_val |= 0x2; // recv int enable
-                    cr_val |= 0x4; // xmit int enable
-                    cr_val |= (toSend << 8); // the character to send
-                    USLOSS_DeviceOutput(USLOSS_TERM_DEV, termNum, (void*)(long)cr_val);
-                    break;
-                case 2:
-                    MboxRecv(term2Sender, toSend,1);
-                    cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
-                    cr_val |= 0x2; // recv int enable
-                    cr_val |= 0x4; // xmit int enable
-                    cr_val |= (toSend << 8); // the character to send
-                    USLOSS_DeviceOutput(USLOSS_TERM_DEV, termNum, (void*)(long)cr_val);
-                    break;
-                case 3:
-                    MboxRecv(term3Sender, toSend,1);
-                    cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
-                    cr_val |= 0x2; // recv int enable
-                    cr_val |= 0x4; // xmit int enable
-                    cr_val |= (toSend << 8); // the character to send
-                    USLOSS_DeviceOutput(USLOSS_TERM_DEV, termNum, (void*)(long)cr_val);
-                    break;
-                default:
-                    break;
-            }
+            MboxRecv(termSender[termNum], toSend,1);
+            cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
+            cr_val |= 0x2; // recv int enable
+            cr_val |= 0x4; // xmit int enable
+            cr_val |= (toSend << 8); // the character to send
+            USLOSS_DeviceOutput(USLOSS_TERM_DEV, termNum, (void*)(long)cr_val);
         }
-
-        //USLOSS_Console("terminal interupt recv=%d xmit=%d\n", recvStatus,    term1Recv = MboxCreate(10, MAXLINE);
-
     }
 }
 
@@ -281,10 +242,10 @@ void phase4_start_service_processes(void){
     term1Mut = MboxCreate(0, 0);
     term2Mut = MboxCreate(0, 0);
     term3Mut = MboxCreate(0, 0);
-    term0Sender = MboxCreate(1, 1);
-    term1Sender = MboxCreate(1, 1);
-    term2Sender = MboxCreate(1, 1);
-    term3Sender = MboxCreate(1, 1);
+    termSender[0] = MboxCreate(1, 1);
+    termSender[1] = MboxCreate(1, 1);
+    termSender[2] = MboxCreate(1, 1);
+    termSender[3] = MboxCreate(1, 1);
 
     termRecvMbox[0] = MboxCreate(10, MAXLINE+1);
     termRecvMbox[1] = MboxCreate(10, MAXLINE+1);
