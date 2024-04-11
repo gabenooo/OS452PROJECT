@@ -12,6 +12,7 @@ int CLOCK = 0;
 
 int termMut[4];
 int termSender[4];
+int writeCompleted[4];
 
 int termRecvMbox[4];
 
@@ -28,9 +29,22 @@ struct sleepItem sleepItems[MAXPROC];
 struct sleepItem* sleepQueue;
 
 
+/*
+ * Function:  termRead
+ * -------------------
+ * This function reads data from a specified terminal into a buffer.
+ * It checks for errors, reads from the terminal receive mailbox into a temporary buffer,
+ * and then copies the appropriate amount of data to the provided buffer.
+ * It sets the actual length of data read and returns appropriate values.
+ * 
+ * arguments:
+ *  void* arg - arguments passed to the function (USLOSS_Sysargs structure)
+ * 
+ * returns:
+ *  void
+ */
 void termRead(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
-    // CHECKMODE;
     void * buffer = args->arg1;
     long bufferSize = args->arg2;
     long unitID = args->arg3;
@@ -41,13 +55,12 @@ void termRead(void* arg) {
         return;
     }
 
+    /* Read into a buffer first */
     char fullBuffer[MAXLINE];
     memset(fullBuffer, '\0', MAXLINE);
 
     int status = MboxRecv(termRecvMbox[unitID], fullBuffer, MAXLINE+1);
     strncpy(buffer, fullBuffer, bufferSize);
-
-    //USLOSS_Console("Status code is %d, recived on %d, Recieved string %s\n", status, termRecvMbox[unitID], fullBuffer);
 
     /* Set the out parameters */
     int actualLen = strlen(buffer);
@@ -57,40 +70,58 @@ void termRead(void* arg) {
         args->arg2 = bufferSize;
     }
     args->arg4 = 0;
-
 }
 
+/*
+ * Function:  termWrite
+ * --------------------
+ * This function writes data to a specified terminal.
+ * It acquires the terminal mutex, then sends each character in the buffer
+ * to the terminal sender mailbox for transmission.
+ * After sending each character, it waits for the write completion signal.
+ * Finally, it releases the terminal mutex.
+ * 
+ * arguments:
+ *  void* arg - arguments passed to the function (USLOSS_Sysargs structure)
+ * 
+ * returns:
+ *  void
+ */
 void termWrite(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
-    USLOSS_Console("Write called\n");
-    // grab lock 
     void * buffer = args->arg1;
     long bufferSize = args->arg2;
     long unitID = args->arg3;
 
-    // *numCharsWritten = (long) sysArg.arg2;
-    // return (long) sysArg.arg4;
-
-    USLOSS_Console("getting the lock\n");
-
+    /* Grab the lock */
     MboxSend(termMut[unitID], NULL, NULL);
 
-    USLOSS_Console("lock retrieved\n");
-
+    /* Send the message */
     for (int c = 0 ; c < bufferSize; c++){
         char* toSend = &buffer[c];
-        //USLOSS_Console("sending message\n");
         MboxSend(termSender[unitID], toSend,1);
+        MboxRecv(writeCompleted[unitID], NULL, 0);
     }
+    /* Release the lock */
     MboxRecv(termMut[unitID], NULL, NULL);
-    // *numCharsWritten = (long) sysArg.arg2;
-    args->arg4 = 0;
-    
 }
 
-
+/*
+ * Function:  clock
+ * ----------------
+ * This function serves as the clock device handler.
+ * It continuously waits for clock device interrupts.
+ * When an interrupt occurs, it checks the sleep queue to unblock any processes
+ * that are ready to be woken up based on their wakeup time.
+ * 
+ * arguments:
+ *  None
+ * 
+ * returns:
+ *  void
+ */
 void clock() {
-    //USLOSS_Console("clock called\n");
+    /* Loops indefinetly */
     while (1 == 1) {
         int status;
         waitDevice(CLOCK, 0, &status);
@@ -111,17 +142,27 @@ void clock() {
     }
 }
 
-
+/*
+ * Function:  sleep
+ * ----------------
+ * This function puts the current process to sleep for a specified amount of time.
+ * It creates a mailbox for the process, calculates the wakeup time based on the
+ * current time and the provided sleep duration, and adds the process to the sleep queue.
+ * The process then waits on its mailbox until it is woken up.
+ * 
+ * arguments:
+ *  void* arg - arguments passed to the function (USLOSS_Sysargs structure)
+ * 
+ * returns:
+ *  void
+ */
 void sleep(void* arg){
-    //USLOSS_Console("sleep called\n");
-
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
 
     int pid = getpid();
     int mboxID = MboxCreate(0, 0);
 
     int curTime = currentTime();
-    //USLOSS_Console("time is %d, end time is %d\n", curTime, (curTime + ((int)args->arg1 * 1000000)));
 
     sleepItems[pid].mboxId = mboxID;
     sleepItems[pid].wakeupTime = (currentTime() + ((int)args->arg1 * 1000000));
@@ -151,13 +192,26 @@ void sleep(void* arg){
             }
         }
     }
-
     MboxRecv(mboxID, NULL, 0);
     args->arg4 = 0;
-
-    return;
 }
 
+/*
+ * Function:  termd
+ * ----------------
+ * This function handles terminal input and output for a specific terminal.
+ * It continuously waits for input or output requests on the specified terminal device.
+ * When input is received, it stores characters in the buffer and sends it to the
+ * terminal receive mailbox when the buffer is full or a newline character is encountered.
+ * When output is requested, it sends characters from the terminal sender mailbox to
+ * the terminal device for transmission.
+ * 
+ * arguments:
+ *  char* arg - argument indicating the terminal number
+ * 
+ * returns:
+ *  void
+ */
 void termd(char* arg){
     int termNum =  atoi(arg);
 
@@ -177,9 +231,7 @@ void termd(char* arg){
 
             /* Checks if buffer is full or newline encounterd */
             if (len + 1 >= MAXLINE || readChar == '\n') {
-                //USLOSS_Console("%s\n", buffers[termNum]);
                 int mboxstatus = MboxCondSend(termRecvMbox[termNum], buffers[termNum], len+1);
-                //USLOSS_Console("mbox status is %d on mbox %d, string is send is %s\n", mboxstatus, termRecvMbox[termNum], buffers[termNum]);
                 resetBuffer(termNum);
             }
         }
@@ -190,18 +242,29 @@ void termd(char* arg){
             int cr_val;
             int xmitRecStatus = MboxCondRecv(termSender[termNum], toSend,1);
             
-            if (xmitRecStatus >= 0) {
-                //USLOSS_Console("Status is %d, character is %c\n", xmitRecStatus, toSend[0]);
-                cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
-                cr_val |= 0x2; // recv int enable
-                cr_val |= 0x4; //t enable/ xmit in
-                cr_val |= (toSend[0] << 8); // the character to send
-                USLOSS_DeviceOutput(USLOSS_TERM_DEV, termNum, (void*)(long)cr_val);
-            }
+            if (xmitRecStatus >= 0) {  
+                cr_val = 0x1;
+                cr_val |= 0x2; 
+                cr_val |= 0x4; 
+                cr_val |= (toSend[0] << 8); 
+                int Bstatus = USLOSS_DeviceOutput(USLOSS_TERM_DEV, termNum, (void*)(long)cr_val);
+                MboxCondSend(writeCompleted[termNum], NULL, 0);
+            } 
         }
     }
 }
 
+/*
+ * Function:  phase4_init
+ * ----------------------
+ * This function initializes sleep items and resets buffers for terminal handling.
+ * 
+ * arguments:
+ *  None
+ * 
+ * returns:
+ *  void
+ */
 void phase4_init(void){
     for (int i = 0; i < MAXPROC; i++) {
         sleepItems[i].mboxId = 0;
@@ -214,15 +277,35 @@ void phase4_init(void){
     }
 }
 
+/*
+ * Function:  phase4_start_service_processes
+ * ----------------------------------------
+ * This function initializes various mailboxes and system call vectors required
+ * for starting service processes related to terminal handling and clock.
+ * It also initializes terminal control registers and creates processes for
+ * terminal handling.
+ * 
+ * arguments:
+ *  None
+ * 
+ * returns:
+ *  void
+ */
 void phase4_start_service_processes(void){
     termMut[0] = MboxCreate(1, 0);
     termMut[1] = MboxCreate(1, 0);
     termMut[2] = MboxCreate(1, 0);
     termMut[3] = MboxCreate(1, 0);
+
     termSender[0] = MboxCreate(1, 1);
     termSender[1] = MboxCreate(1, 1);
     termSender[2] = MboxCreate(1, 1);
     termSender[3] = MboxCreate(1, 1);
+
+    writeCompleted[0] = MboxCreate(0, 0);
+    writeCompleted[1] = MboxCreate(0, 0);
+    writeCompleted[2] = MboxCreate(0, 0);
+    writeCompleted[3] = MboxCreate(0, 0);
 
     termRecvMbox[0] = MboxCreate(10, MAXLINE+1);
     termRecvMbox[1] = MboxCreate(10, MAXLINE+1);
@@ -243,10 +326,21 @@ void phase4_start_service_processes(void){
     USLOSS_DeviceOutput(USLOSS_TERM_DEV, 0, ctrReg);
     USLOSS_DeviceOutput(USLOSS_TERM_DEV, 1, ctrReg);
     USLOSS_DeviceOutput(USLOSS_TERM_DEV, 2, ctrReg);
-    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 3, ctrReg);
-    
+    USLOSS_DeviceOutput(USLOSS_TERM_DEV, 3, ctrReg); 
 }
 
+/*
+ * Function:  resetBuffer
+ * --------------------
+ * This function resets the contents of a specific buffer to null characters ('\0').
+ * It iterates through the buffer and assigns '\0' to each element.
+ * 
+ * arguments:
+ *  int bufferToReset - the index of the buffer to be reset
+ * 
+ * returns:
+ *  void
+ */
 void resetBuffer(int bufferToReset) {
     for (int i = 0; i < MAXLINE + 1; i++) {
             buffers[bufferToReset][i] = '\0';
