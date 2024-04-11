@@ -8,16 +8,36 @@
 
 int CLOCK = 0;
 
-
-
+/*
+ * termMut array for the ternimal mailbox locks
+ */
 int termMut[4];
+/*
+ * termsender array for the mailboxs that send one char at a time to the terminal procs
+ */
 int termSender[4];
+
 int writeCompleted[4];
 
+/*
+ * termRecvMbox array for the ternimal mailbox used for recv
+ */
 int termRecvMbox[4];
-
+/*
+ * buffers for terminal recv
+ */
 char buffers[4][MAXLINE + 1];
 
+/*
+ * Struct:  sleepItem
+ * --------------------
+ * This is the struct that holds a mailboxId used to wake up a proc
+ * 
+ * variables:
+ * mboxId- int that is the id of the mailbox to send to
+ * wakeupTime - int that is the time to wake up the proc
+ * next - the next sleepItem in the list
+ */
 
 struct sleepItem {
     int mboxId;
@@ -25,7 +45,13 @@ struct sleepItem {
     struct sleepItem* next;
 };
 
+/*
+ * sleepItems struct for sleeping procs
+ */
 struct sleepItem sleepItems[MAXPROC];
+/*
+ * pointer to wake up procs sleeping
+ */
 struct sleepItem* sleepQueue;
 
 
