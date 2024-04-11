@@ -191,7 +191,7 @@ void termd(char* arg){
             int xmitRecStatus = MboxCondRecv(termSender[termNum], toSend,1);
             
             if (xmitRecStatus >= 0) {
-                USLOSS_Console("Status is %d, character is %c\n", xmitRecStatus, toSend[0]);
+                //USLOSS_Console("Status is %d, character is %c\n", xmitRecStatus, toSend[0]);
                 cr_val = 0x1; // this turns on the ’send char’ bit (USLOSS spec page 9)
                 cr_val |= 0x2; // recv int enable
                 cr_val |= 0x4; //t enable/ xmit in
