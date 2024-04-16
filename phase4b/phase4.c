@@ -354,6 +354,10 @@ void phase4_start_service_processes(void){
     systemCallVec[SYS_SLEEP] = sleep;
     systemCallVec[SYS_TERMREAD] = termRead;
     systemCallVec[SYS_TERMWRITE] = termWrite;
+    systemCallVec[SYS_DISKSIZE] = diskSize;
+    systemCallVec[SYS_DISKREAD] = diskRead;
+    systemCallVec[SYS_DISKWRITE] = diskWrite;
+
     spork("ClockD", clock, NULL, USLOSS_MIN_STACK, 1);
 
     spork("Term1D", termd, "0", USLOSS_MIN_STACK, 1);
