@@ -64,10 +64,15 @@ void diskSize(void* arg) {
     req.opr = USLOSS_DISK_TRACKS;
     req.reg1 = &response;
 
-    int deviceResponse = USLOSS_DeviceOutput(USLOSS_DISK_DEV, unitID, &req);
+    USLOSS_DeviceOutput(USLOSS_DISK_DEV, unitID, &req);
     MboxRecv(diskTracks[unitID], NULL, 0);  
 
-    USLOSS_Console("Device response code is %d, unitID is %d and size is %d\n", deviceResponse, unitID, response);
+    args->arg1 = 512;
+    args->arg2 = 16;
+    args->arg3 = response;
+
+
+    //USLOSS_Console("UnitID is %d and size is %d\n", unitID, response);
 }
 
 void diskRead(void* arg) {
