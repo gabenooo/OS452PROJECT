@@ -1,0 +1,14 @@
+start4(): Start 5 children who all sleep for 10 seconds. Upon
+          waking up, each child checks if its sleep time was at
+          least 10 seconds.
+Child1(): Going to sleep for 10 seconds
+Child2(): Going to sleep for 10 seconds
+Child3(): Going to sleep for 10 seconds
+Child4(): Going to sleep for 10 seconds
+Child5(): Going to sleep for 10 seconds
+Child5(): Sleep done at time 11050103
+Child4(): Sleep done at time 11050146
+Child3(): Sleep done at time 11050193
+Child2(): Sleep done at time 11050236
+Child1(): Sleep done at time 11050282
+start4(): Test sleep done.
