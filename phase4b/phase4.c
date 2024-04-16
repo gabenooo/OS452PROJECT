@@ -54,6 +54,19 @@ struct sleepItem sleepItems[MAXPROC];
  */
 struct sleepItem* sleepQueue;
 
+void diskSize(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+}
+
+void diskRead(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+}
+
+
+void diskWrite(void* arg) {
+    USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+}
+
 
 /*
  * Function:  termRead
