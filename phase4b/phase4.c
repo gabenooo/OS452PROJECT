@@ -46,6 +46,19 @@ struct sleepItem {
     struct sleepItem* next;
 };
 
+struct diskInfo {
+    int mboxId;
+    int isRead;
+    void* diskBuffer;
+    int unit;
+    int track;
+    int first;
+    int sectors;
+};
+
+struct diskInfo disks[MAXPROC];
+struct diskInfo *diskQueue;
+
 /*
  * sleepItems struct for sleeping procs
  */
@@ -336,6 +349,14 @@ void phase4_init(void){
         sleepItems[i].mboxId = 0;
         sleepItems[i].wakeupTime = 0;
         sleepItems[i].next = NULL;
+
+        disks[i].diskBuffer = NULL;
+        disks[i].first = 0;
+        disks[i].isRead = 0;
+        disks[i].mboxId = 0;
+        disks[i].sectors = 0;
+        disks[i].track = 0;
+        disks[i].unit = 0;
     }
 
     for (int i = 0; i < 4; i++) {
