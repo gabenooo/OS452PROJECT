@@ -54,6 +54,7 @@ struct diskInfo {
     int track;
     int first;
     int sectors;
+    struct diskInfo* next;
 };
 
 struct diskInfo disks[MAXPROC];
@@ -445,4 +446,36 @@ void resetBuffer(int bufferToReset) {
     for (int i = 0; i < MAXLINE + 1; i++) {
             buffers[bufferToReset][i] = '\0';
     }
+}
+
+void appendQueue(struct diskInfo* disk) {
+    /* If queue is empty then add disk */
+    if ( diskQueue == NULL ) {
+        diskQueue = disk;
+        return;
+    }
+
+    /* If this one should go in the front */
+    struct diskInfo* cur = diskQueue;
+    if (disk->first < cur->first) {
+        disk->next = diskQueue;
+        diskQueue = disk;
+        return;
+    }
+
+    /* Otherwise find the desired location */
+    struct diskInfo* prev = cur;
+    cur = cur->next;
+    while (cur != NULL) {
+        if (disk->first > cur->first) {
+            prev->next = disk;
+            disk->next = cur;
+            return;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+
+    /* If no location found, put it at the end */
+    prev->next = disk;
 }
