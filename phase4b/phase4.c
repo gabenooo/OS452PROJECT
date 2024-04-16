@@ -89,11 +89,39 @@ void diskSize(void* arg) {
 
 void diskRead(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+    void * buffer = args->arg1;
+    long sectors = args->arg2;
+    long track = args->arg3;
+    long first = args->arg3;
+    long unit = args->arg3;
+
+    int diskIndex = getpid();
+    
+
+//     struct diskInfo {
+//     int mboxId;
+//     int isRead;
+//     void* diskBuffer;
+//     int unit;
+//     int track;
+//     int first;
+//     int sectors;
+// };
+
+// struct diskInfo disks[MAXPROC];
+
+
+
 }
 
 
 void diskWrite(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+    void * buffer = args->arg1;
+    long sectors = args->arg2;
+    long track = args->arg3;
+    long first = args->arg3;
+    long unit = args->arg3;
 }
 
 
