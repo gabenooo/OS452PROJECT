@@ -351,10 +351,15 @@ void diskd(char* arg) {
     int diskNum =  atoi(arg);
     while (1 == 1) {
         int status;
-        //USLOSS_Console("waiting on disk %d\n", diskNum);
         waitDevice(USLOSS_DISK_DEV, diskNum, &status);
-        //USLOSS_Console("Completed with status %d\n", status);
         MboxCondSend(diskTracks[diskNum], NULL, 0);
+
+        /* If there is an item waiting in the queue, remove it */
+        if (diskQueue != NULL) {
+            struct diskInfo* cur = diskQueue;
+            diskQueue = diskQueue->next;
+            MboxCondSend(cur->mboxId, NULL, 0);
+        }
     }
 }
 
