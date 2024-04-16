@@ -71,7 +71,6 @@ void diskSize(void* arg) {
     args->arg2 = 16;
     args->arg3 = response;
 
-
     //USLOSS_Console("UnitID is %d and size is %d\n", unitID, response);
 }
 
