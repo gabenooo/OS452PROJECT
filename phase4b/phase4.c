@@ -56,6 +56,16 @@ struct sleepItem* sleepQueue;
 
 void diskSize(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
+    int response;
+    long unitID = args->arg1;
+
+    USLOSS_DeviceRequest req;
+    req.opr = USLOSS_DISK_TRACKS;
+    req.reg1 = &response;
+
+    int deviceResponse = USLOSS_DeviceOutput(USLOSS_DISK_DEV, unitID, &req);
+
+    USLOSS_Console("Device response code is %d and size is %d\n", deviceResponse, response);
 }
 
 void diskRead(void* arg) {
