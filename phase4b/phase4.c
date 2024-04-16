@@ -18,6 +18,7 @@ int termMut[4];
 int termSender[4];
 
 int writeCompleted[4];
+int diskTracks[2];
 
 /*
  * termRecvMbox array for the ternimal mailbox used for recv
@@ -64,8 +65,9 @@ void diskSize(void* arg) {
     req.reg1 = &response;
 
     int deviceResponse = USLOSS_DeviceOutput(USLOSS_DISK_DEV, unitID, &req);
+    MboxRecv(diskTracks[unitID], NULL, 0);  
 
-    USLOSS_Console("Device response code is %d and size is %d\n", deviceResponse, response);
+    USLOSS_Console("Device response code is %d, unitID is %d and size is %d\n", deviceResponse, unitID, response);
 }
 
 void diskRead(void* arg) {
@@ -303,6 +305,17 @@ void termd(char* arg){
     }
 }
 
+void diskd(char* arg) {
+    int diskNum =  atoi(arg);
+    while (1 == 1) {
+        int status;
+        //USLOSS_Console("waiting on disk %d\n", diskNum);
+        waitDevice(USLOSS_DISK_DEV, diskNum, &status);
+        //USLOSS_Console("Completed with status %d\n", status);
+        MboxCondSend(diskTracks[diskNum], NULL, 0);
+    }
+}
+
 /*
  * Function:  phase4_init
  * ----------------------
@@ -356,6 +369,10 @@ void phase4_start_service_processes(void){
     writeCompleted[2] = MboxCreate(0, 0);
     writeCompleted[3] = MboxCreate(0, 0);
 
+    diskTracks[0] = MboxCreate(0, 0);
+    diskTracks[1] = MboxCreate(0, 0);
+
+
     termRecvMbox[0] = MboxCreate(10, MAXLINE+1);
     termRecvMbox[1] = MboxCreate(10, MAXLINE+1);
     termRecvMbox[2] = MboxCreate(10, MAXLINE+1);
@@ -374,6 +391,10 @@ void phase4_start_service_processes(void){
     spork("Term2D", termd, "1", USLOSS_MIN_STACK, 1);
     spork("Term3D", termd, "2", USLOSS_MIN_STACK, 1);
     spork("Term4D", termd, "3", USLOSS_MIN_STACK, 1);
+
+    spork("Disk1D", diskd, "0", USLOSS_MIN_STACK, 1);
+    spork("Disk2D", diskd, "1", USLOSS_MIN_STACK, 1);
+
 
     int ctrReg = 0x6;
     USLOSS_DeviceOutput(USLOSS_TERM_DEV, 0, ctrReg);
