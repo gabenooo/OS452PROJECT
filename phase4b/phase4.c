@@ -50,10 +50,10 @@ struct diskInfo {
     int mboxId;
     int isRead;
     void* diskBuffer;
-    int unit;
-    int track;
-    int first;
-    int sectors;
+    long unit;
+    long track;
+    long first;
+    long sectors;
     struct diskInfo* next;
 };
 
@@ -96,22 +96,18 @@ void diskRead(void* arg) {
     long first = args->arg3;
     long unit = args->arg3;
 
+    int mbox = MboxCreate(0,0);
+
     int diskIndex = getpid();
+
+    disks[diskIndex].mboxId = mbox;
+    disks[diskIndex].isRead = 1;
+    disks[diskIndex].diskBuffer = buffer;
+    disks[diskIndex].unit = unit;
+    disks[diskIndex].track = track;
+    disks[diskIndex].first = first;
+    disks[diskIndex].sectors = sectors;
     
-
-//     struct diskInfo {
-//     int mboxId;
-//     int isRead;
-//     void* diskBuffer;
-//     int unit;
-//     int track;
-//     int first;
-//     int sectors;
-// };
-
-// struct diskInfo disks[MAXPROC];
-
-
 
 }
 
