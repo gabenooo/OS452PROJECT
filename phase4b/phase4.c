@@ -181,6 +181,8 @@ void diskWrite(void* arg) {
     }
 
     /* Call the next item in the queue */
+    args->arg1 = 0;
+    args->arg4 = 0; 
     diskQueue = diskQueue->next;
     if (diskQueue != NULL) {
         MboxCondSend(diskQueue->mboxId, NULL, 0);
