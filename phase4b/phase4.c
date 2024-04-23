@@ -99,7 +99,6 @@ void diskRead(void* arg) {
     disks[diskIndex].mboxId = mbox;
     disks[diskIndex].first = track;
 
-    USLOSS_Console("Getting to the queue\n");
 
     appendQueue(&disks[diskIndex]);
     if (diskQueue->next != NULL){
@@ -129,9 +128,10 @@ void diskRead(void* arg) {
     }
 
     // unblock next in queue
+    diskQueue = diskQueue->next;
     if (diskQueue[0].next != NULL){
-            MboxSend(diskQueue[0].mboxId, NULL, NULL);
-        }
+        MboxSend(diskQueue[0].mboxId, NULL, NULL);
+    }
     
 }
 
