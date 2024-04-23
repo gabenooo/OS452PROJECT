@@ -88,8 +88,8 @@ void diskRead(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     void * buffer = args->arg1;
     long sectors = args->arg2;
-    long track = args->arg3;
-    long first = args->arg3;
+    long track = args->arg4;
+    long first = args->arg5;
     long unit = args->arg3;
 
     int mbox = MboxCreate(0,0);
@@ -104,12 +104,13 @@ void diskRead(void* arg) {
     if (diskQueue->next != NULL){
         MboxRecv(mbox, NULL, NULL);  
     } 
-
+    
     int sectorIdx = first;
     int curTrack = track;
     int buffPointer = buffer;
     seek(track, unit);
     for (int i = 0; i < sectors; i++){
+        
         if (sectorIdx > 16){
             curTrack++;
             sectorIdx = 0;
@@ -119,7 +120,7 @@ void diskRead(void* arg) {
         req.opr = USLOSS_DISK_READ;
         req.reg1 = &sectorIdx;
 
-
+        
         req.reg2 = buffPointer;
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
         buffPointer += 512;
@@ -129,7 +130,7 @@ void diskRead(void* arg) {
 
     // unblock next in queue
     diskQueue = diskQueue->next;
-    if (diskQueue[0].next != NULL){
+    if (diskQueue != NULL){
         MboxSend(diskQueue[0].mboxId, NULL, NULL);
     }
     
