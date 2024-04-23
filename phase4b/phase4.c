@@ -97,18 +97,32 @@ void diskRead(void* arg) {
     int diskIndex = getpid();
 
     disks[diskIndex].mboxId = mbox;
-    disks[diskIndex].first = first;
+    disks[diskIndex].first = track;
 
     appendQueue(*disks[diskIndex]);
     // if first go
     if (diskQueue[0].next = NULL){
         // only one in queue
-        USLOSS_DeviceRequest req;
-        req.opr = USLOSS_DISK_WRITE;
-        //req.reg1 = (void*)(long)blockIndex;
-        req.reg2 = buffer;
-        USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
 
+        int sectorIdx = first;
+        int curTrack = track;
+        seek(track, unit);
+        for (int i = 0; i < sectors; i++){
+            if (sectorIdx > 16){
+                curTrack++;
+                sectorIdx = 0;
+                seek(curTrack, unit);
+            }
+            USLOSS_DeviceRequest req;
+            req.opr = USLOSS_DISK_READ;
+            req.reg1 = &sectorIdx;
+
+            req.reg2 = buffer;
+            USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+
+            sectorIdx++;
+        }
+        
         
     } else {
         MboxRecv(mbox, NULL, NULL);
