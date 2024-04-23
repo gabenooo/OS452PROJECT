@@ -99,20 +99,34 @@ void diskRead(void* arg) {
     disks[diskIndex].mboxId = mbox;
     disks[diskIndex].first = first;
 
-    //appendQueue(*disks[diskIndex]);
+    appendQueue(*disks[diskIndex]);
+    // if first go
+    if (diskQueue[0].next = NULL){
+        // only one in queue
+        USLOSS_DeviceRequest req;
+        req.opr = USLOSS_DISK_WRITE;
+        //req.reg1 = (void*)(long)blockIndex;
+        req.reg2 = buffer;
+        USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
 
-    MboxRecv(mbox, NULL, NULL);
+        
+    } else {
+        MboxRecv(mbox, NULL, NULL);
 
-    //USLOSS_DISK_SEEK(first);
+        //read
+        USLOSS_DeviceRequest req;
+        req.opr = USLOSS_DISK_WRITE;
+        //req.reg1 = (void*)(long)blockIndex;
+        req.reg2 = buffer;
+        USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+        // then send on next mailbox
+    }
 
-    USLOSS_DeviceRequest req;
-    req.opr = USLOSS_DISK_WRITE;
-    //req.reg1 = (void*)(long)blockIndex;
-    req.reg2 = buffer;
-    USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
-
-
-
+    // unblock next in queue
+    if (diskQueue[0].next != NULL){
+            MboxSend(diskQueue[0].mboxId, NULL, NULL);
+        }
+    
 }
 
 
