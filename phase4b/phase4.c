@@ -107,7 +107,23 @@ void diskRead(void* arg) {
     disks[diskIndex].track = track;
     disks[diskIndex].first = first;
     disks[diskIndex].sectors = sectors;
-    
+
+    appendQueue(*disks[diskIndex]);
+
+    MboxRecv(mbox, NULL, NULL);
+
+    USLOSS_DISK_SEEK(first);
+
+    USLOSS_DeviceRequest req;
+    req.opr = USLOSS_DISK_WRITE;
+    req.reg1 = (void*)(long)blockIndex;
+    req.reg2 = buffer;
+    USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+
+
+
+
+
 
 }
 
