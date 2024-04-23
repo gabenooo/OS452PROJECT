@@ -99,59 +99,33 @@ void diskRead(void* arg) {
     disks[diskIndex].mboxId = mbox;
     disks[diskIndex].first = track;
 
+    USLOSS_Console("Getting to the queue\n");
+
     appendQueue(&disks[diskIndex]);
-    // if first go
-    if (diskQueue[0].next = NULL){
-        // only one in queue
+    if (diskQueue->next != NULL){
+        MboxRecv(mbox, NULL, NULL);  
+    } 
 
-        int sectorIdx = first;
-        int curTrack = track;
-        int buffPointer = buffer;
-        seek(track, unit);
-        for (int i = 0; i < sectors; i++){
-            if (sectorIdx > 16){
-                curTrack++;
-                sectorIdx = 0;
-                seek(curTrack, unit);
-            }
-            USLOSS_DeviceRequest req;
-            req.opr = USLOSS_DISK_READ;
-            req.reg1 = &sectorIdx;
-
-
-            req.reg2 = buffPointer;
-            USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
-            buffPointer += 512;
-
-            sectorIdx++;
+    int sectorIdx = first;
+    int curTrack = track;
+    int buffPointer = buffer;
+    seek(track, unit);
+    for (int i = 0; i < sectors; i++){
+        if (sectorIdx > 16){
+            curTrack++;
+            sectorIdx = 0;
+            seek(curTrack, unit);
         }
-        
-        
-    } else {
-        MboxRecv(mbox, NULL, NULL);
-
-        //read
-        int sectorIdx = first;
-        int curTrack = track;
-        int buffPointer = buffer;
-        seek(track, unit);
-        for (int i = 0; i < sectors; i++){
-            if (sectorIdx > 16){
-                curTrack++;
-                sectorIdx = 0;
-                seek(curTrack, unit);
-            }
-            USLOSS_DeviceRequest req;
-            req.opr = USLOSS_DISK_READ;
-            req.reg1 = &sectorIdx;
+        USLOSS_DeviceRequest req;
+        req.opr = USLOSS_DISK_READ;
+        req.reg1 = &sectorIdx;
 
 
-            req.reg2 = buffPointer;
-            USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
-            buffPointer += 512;
+        req.reg2 = buffPointer;
+        USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+        buffPointer += 512;
 
-            sectorIdx++;
-        }
+        sectorIdx++;
     }
 
     // unblock next in queue
