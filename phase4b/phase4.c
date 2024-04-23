@@ -104,7 +104,7 @@ void diskRead(void* arg) {
     if (diskQueue->next != NULL){
         MboxRecv(mbox, NULL, NULL);  
     } 
-    
+
     int sectorIdx = first;
     int curTrack = track;
     char* buffPointer = buffer;
@@ -118,9 +118,7 @@ void diskRead(void* arg) {
 
         USLOSS_DeviceRequest req;
         req.opr = USLOSS_DISK_READ;
-        req.reg1 = &sectorIdx;
-
-
+        req.reg1 = sectorIdx;
         req.reg2 = buffPointer;
 
         //USLOSS_Console("Reading on track %d in sector %d\n", curTrack, sectorIdx);
