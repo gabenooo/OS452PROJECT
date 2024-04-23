@@ -106,6 +106,7 @@ void diskRead(void* arg) {
 
         int sectorIdx = first;
         int curTrack = track;
+        int buffPointer = buffer;
         seek(track, unit);
         for (int i = 0; i < sectors; i++){
             if (sectorIdx > 16){
@@ -117,8 +118,10 @@ void diskRead(void* arg) {
             req.opr = USLOSS_DISK_READ;
             req.reg1 = &sectorIdx;
 
-            req.reg2 = buffer;
+
+            req.reg2 = buffPointer;
             USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+            buffPointer += 512;
 
             sectorIdx++;
         }
@@ -128,12 +131,27 @@ void diskRead(void* arg) {
         MboxRecv(mbox, NULL, NULL);
 
         //read
-        USLOSS_DeviceRequest req;
-        req.opr = USLOSS_DISK_WRITE;
-        //req.reg1 = (void*)(long)blockIndex;
-        req.reg2 = buffer;
-        USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
-        // then send on next mailbox
+        int sectorIdx = first;
+        int curTrack = track;
+        int buffPointer = buffer;
+        seek(track, unit);
+        for (int i = 0; i < sectors; i++){
+            if (sectorIdx > 16){
+                curTrack++;
+                sectorIdx = 0;
+                seek(curTrack, unit);
+            }
+            USLOSS_DeviceRequest req;
+            req.opr = USLOSS_DISK_READ;
+            req.reg1 = &sectorIdx;
+
+
+            req.reg2 = buffPointer;
+            USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+            buffPointer += 512;
+
+            sectorIdx++;
+        }
     }
 
     // unblock next in queue
