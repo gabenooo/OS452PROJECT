@@ -178,7 +178,7 @@ void diskWrite(void* arg) {
         
         /* Setup the next str to write */
         memset(partBuf, '\0', 512);
-        strncpy(partBuf, buffer, 512);
+        memcpy(partBuf, buffer, 512);
         buffer += 512;
 
 
@@ -186,6 +186,7 @@ void diskWrite(void* arg) {
         req.opr = USLOSS_DISK_WRITE;
         req.reg1 = counter;
         req.reg2 = partBuf;
+        //USLOSS_Console("Total to write is '%s'\n", buffer);
         //USLOSS_Console("Writing on track %d in sector %d this msg '%s'\n", track, counter, partBuf);
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
         MboxRecv(diskTracks[unit], NULL, 0); 
