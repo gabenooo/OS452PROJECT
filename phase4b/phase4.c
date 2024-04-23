@@ -135,6 +135,25 @@ void diskWrite(void* arg) {
     long track = args->arg3;
     long first = args->arg3;
     long unit = args->arg3;
+    USLOSS_DeviceRequest req;
+
+
+    int diskIndex = getpid();
+
+    disks[diskIndex].mboxId = MboxCreate(0,0);
+    disks[diskIndex].isRead = 1;
+    disks[diskIndex].diskBuffer = buffer;
+    disks[diskIndex].unit = unit;
+    disks[diskIndex].track = track;
+    disks[diskIndex].first = first;
+    disks[diskIndex].sectors = sectors;
+
+    for (int i = 0; i < sectors; i++) {
+        USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+        MboxRecv(diskTracks[unit], NULL, 0);  
+    }
+
+
 }
 
 
@@ -397,6 +416,7 @@ void phase4_init(void){
         sleepItems[i].next = NULL;
 
         disks[i].diskBuffer = NULL;
+        disks[i].next = NULL;
         disks[i].first = 0;
         disks[i].isRead = 0;
         disks[i].mboxId = 0;
@@ -522,4 +542,8 @@ void appendQueue(struct diskInfo* disk) {
 
     /* If no location found, put it at the end */
     prev->next = disk;
+}
+
+void seek() {
+    USLOSS_DeviceRequest req;
 }
