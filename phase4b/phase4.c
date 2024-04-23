@@ -49,6 +49,7 @@ struct sleepItem {
 
 struct diskInfo {
     int mboxId;
+    int first;
     struct diskInfo* next;
 };
 
@@ -96,22 +97,17 @@ void diskRead(void* arg) {
     int diskIndex = getpid();
 
     disks[diskIndex].mboxId = mbox;
-    disks[diskIndex].isRead = 1;
-    disks[diskIndex].diskBuffer = buffer;
-    disks[diskIndex].unit = unit;
-    disks[diskIndex].track = track;
     disks[diskIndex].first = first;
-    disks[diskIndex].sectors = sectors;
 
-    appendQueue(*disks[diskIndex]);
+    //appendQueue(*disks[diskIndex]);
 
     MboxRecv(mbox, NULL, NULL);
 
-    USLOSS_DISK_SEEK(first);
+    //USLOSS_DISK_SEEK(first);
 
     USLOSS_DeviceRequest req;
     req.opr = USLOSS_DISK_WRITE;
-    req.reg1 = (void*)(long)blockIndex;
+    //req.reg1 = (void*)(long)blockIndex;
     req.reg2 = buffer;
     USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
 
@@ -132,6 +128,7 @@ void diskWrite(void* arg) {
     /* Initialize the write mailbox */
     int diskIndex = getpid();
     disks[diskIndex].mboxId = MboxCreate(0,0);
+    disks[diskIndex].first = first;
 
     appendQueue(&disks[diskIndex]);
 
@@ -411,6 +408,7 @@ void phase4_init(void){
 
         disks[i].next = NULL;
         disks[i].mboxId = 0;
+        disks[i].first = 0;
     }
 
     for (int i = 0; i < 4; i++) {
