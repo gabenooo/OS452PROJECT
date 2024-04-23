@@ -18,6 +18,7 @@ int termMut[4];
 int termSender[4];
 
 int writeCompleted[4];
+
 int diskTracks[2];
 
 /*
@@ -48,12 +49,6 @@ struct sleepItem {
 
 struct diskInfo {
     int mboxId;
-    int isRead;
-    void* diskBuffer;
-    long unit;
-    long track;
-    long first;
-    long sectors;
     struct diskInfo* next;
 };
 
@@ -134,21 +129,25 @@ void diskWrite(void* arg) {
     long unit = args->arg3;
     USLOSS_DeviceRequest req;
 
-
+    /* Initialize the write mailbox */
     int diskIndex = getpid();
-
     disks[diskIndex].mboxId = MboxCreate(0,0);
-    disks[diskIndex].isRead = 1;
-    disks[diskIndex].diskBuffer = buffer;
-    disks[diskIndex].unit = unit;
-    disks[diskIndex].track = track;
-    disks[diskIndex].first = first;
-    disks[diskIndex].sectors = sectors;
+
+    appendQueue(&disks[diskIndex]);
+
+    if (diskQueue->next != NULL) {
+        MboxRecv(disks[diskIndex].mboxId, NULL, 0);
+    }
+
+    
+
+    diskQueue = diskQueue->next;
 
     for (int i = 0; i < sectors; i++) {
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
         MboxRecv(diskTracks[unit], NULL, 0);  
     }
+
 
 
 }
@@ -387,11 +386,9 @@ void diskd(char* arg) {
         MboxCondSend(diskTracks[diskNum], NULL, 0);
 
         /* If there is an item waiting in the queue, remove it */
-        if (diskQueue != NULL) {
-            struct diskInfo* cur = diskQueue;
-            diskQueue = diskQueue->next;
-            MboxCondSend(cur->mboxId, NULL, 0);
-        }
+        // if (diskQueue != NULL) {
+        //     MboxCondSend(diskQueue->mboxId, NULL, 0);
+        // }
     }
 }
 
@@ -412,14 +409,8 @@ void phase4_init(void){
         sleepItems[i].wakeupTime = 0;
         sleepItems[i].next = NULL;
 
-        disks[i].diskBuffer = NULL;
         disks[i].next = NULL;
-        disks[i].first = 0;
-        disks[i].isRead = 0;
         disks[i].mboxId = 0;
-        disks[i].sectors = 0;
-        disks[i].track = 0;
-        disks[i].unit = 0;
     }
 
     for (int i = 0; i < 4; i++) {
@@ -459,7 +450,6 @@ void phase4_start_service_processes(void){
 
     diskTracks[0] = MboxCreate(0, 0);
     diskTracks[1] = MboxCreate(0, 0);
-
 
     termRecvMbox[0] = MboxCreate(10, MAXLINE+1);
     termRecvMbox[1] = MboxCreate(10, MAXLINE+1);
@@ -543,4 +533,6 @@ void appendQueue(struct diskInfo* disk) {
 
 void seek() {
     USLOSS_DeviceRequest req;
+
+
 }
