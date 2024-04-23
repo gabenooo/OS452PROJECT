@@ -99,7 +99,7 @@ void diskRead(void* arg) {
     disks[diskIndex].mboxId = mbox;
     disks[diskIndex].first = track;
 
-    appendQueue(*disks[diskIndex]);
+    appendQueue(&disks[diskIndex]);
     // if first go
     if (diskQueue[0].next = NULL){
         // only one in queue
@@ -153,10 +153,12 @@ void diskWrite(void* arg) {
     long unit = args->arg3;
     USLOSS_DeviceRequest req;
 
+    char partBuf[512];
+
     /* Initialize the write mailbox */
     int diskIndex = getpid();
     disks[diskIndex].mboxId = MboxCreate(0,0);
-    disks[diskIndex].first = first;
+    disks[diskIndex].first = track;
     
     /* Add to the queue and wait if needed */
     appendQueue(&disks[diskIndex]);
@@ -165,17 +167,40 @@ void diskWrite(void* arg) {
     }
 
     /* Perform the operations */
+    int counter = first;
+    seek(track, unit);
     for (int i = 0; i < sectors; i++) {
-        seek(first, unit);
+
+        /* If we are out of space on this track then move to the next one */
+        if (counter >= 16) {
+            track++;
+            counter = 0;
+            seek(track, unit);
+        }
+        
+        /* Then perform the write operation */
+        memset(partBuf, '\0', 512);
+        strncpy(partBuf, buffer, 512);
+        if (strlen(buffer) > 512) {
+            buffer += 512;
+        }
+
+        req.opr = USLOSS_DISK_WRITE;
+        req.reg1 = i + first;
+        req.reg2 = partBuf;
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
-        MboxRecv(diskTracks[unit], NULL, 0);  
+        MboxRecv(diskTracks[unit], NULL, 0); 
+
+        counter++; 
     }
 
-
+    /* Call the next item in the queue */
+    args->arg1 = 0;
+    args->arg4 = 0; 
     diskQueue = diskQueue->next;
-
-
-
+    if (diskQueue != NULL) {
+        MboxCondSend(diskQueue->mboxId, NULL, 0);
+    }
 
 }
 
