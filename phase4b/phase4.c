@@ -85,6 +85,7 @@ void diskSize(void* arg) {
 }
 
 void diskRead(void* arg) {
+    USLOSS_Console("read\n");
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     void * buffer = args->arg1;
     long sectors = args->arg2;
@@ -155,14 +156,20 @@ void diskWrite(void* arg) {
 
     /* Initialize the write mailbox */
     int diskIndex = getpid();
+
     disks[diskIndex].mboxId = MboxCreate(0,0);
     disks[diskIndex].first = track;
     
     /* Add to the queue and wait if needed */
     appendQueue(&disks[diskIndex]);
     if (diskQueue->next != NULL) {
+        //USLOSS_Console("Waiting to write, pid=%d, mbox =%d\n", getpid(), disks[diskIndex].mboxId);
         MboxRecv(disks[diskIndex].mboxId, NULL, 0);
+        
+
     }
+
+    //USLOSS_Console("Now write, pid=%d\n", getpid());
 
     /* Perform the operations */
     int counter = first;
@@ -195,11 +202,15 @@ void diskWrite(void* arg) {
     }
 
     /* Call the next item in the queue */
+    //USLOSS_Console("finishing, pid=%d\n", getpid());
+
     args->arg1 = 0;
     args->arg4 = 0; 
     diskQueue = diskQueue->next;
     if (diskQueue != NULL) {
-        MboxCondSend(diskQueue->mboxId, NULL, 0);
+        //USLOSS_Console("UNBLOCKING, pid=%d, mbox to unblock is %d\n", getpid(), diskQueue->mboxId);
+        MboxSend(diskQueue->mboxId, NULL, 0);
+        //USLOSS_Console("done\n");
     }
 
 }
@@ -560,12 +571,12 @@ void appendQueue(struct diskInfo* disk) {
     }
 
     /* If this one should go in the front */
-    struct diskInfo* cur = diskQueue;
-    if (disk->first < cur->first) {
-        disk->next = diskQueue;
-        diskQueue = disk;
-        return;
-    }
+     struct diskInfo* cur = diskQueue;
+    // if (disk->first < cur->first) {
+    //     disk->next = diskQueue;
+    //     diskQueue = disk;
+    //     return;
+    // }
 
     /* Otherwise find the desired location */
     struct diskInfo* prev = cur;
