@@ -132,21 +132,23 @@ void diskWrite(void* arg) {
     int diskIndex = getpid();
     disks[diskIndex].mboxId = MboxCreate(0,0);
     disks[diskIndex].first = first;
-
+    
+    /* Add to the queue and wait if needed */
     appendQueue(&disks[diskIndex]);
-
     if (diskQueue->next != NULL) {
         MboxRecv(disks[diskIndex].mboxId, NULL, 0);
     }
 
-    
-
-    diskQueue = diskQueue->next;
-
+    /* Perform the operations */
     for (int i = 0; i < sectors; i++) {
+        seek(first, unit);
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
         MboxRecv(diskTracks[unit], NULL, 0);  
     }
+
+
+    diskQueue = diskQueue->next;
+
 
 
 
@@ -532,8 +534,12 @@ void appendQueue(struct diskInfo* disk) {
     prev->next = disk;
 }
 
-void seek() {
+void seek(int track, int unit) {
     USLOSS_DeviceRequest req;
 
+    req.opr = USLOSS_DISK_TRACKS;
+    req.reg1 = track;
 
+    USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+    MboxRecv(diskTracks[unit], NULL, 0);  
 }
