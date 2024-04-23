@@ -88,9 +88,9 @@ void diskRead(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     void * buffer = args->arg1;
     long sectors = args->arg2;
-    long track = args->arg4;
-    long first = args->arg5;
-    long unit = args->arg3;
+    long track = args->arg3;
+    long first = args->arg4;
+    long unit = args->arg5;
 
     int mbox = MboxCreate(0,0);
 
@@ -107,31 +107,38 @@ void diskRead(void* arg) {
     
     int sectorIdx = first;
     int curTrack = track;
-    int buffPointer = buffer;
+    char* buffPointer = buffer;
     seek(track, unit);
     for (int i = 0; i < sectors; i++){
-        
-        if (sectorIdx > 16){
+        if (sectorIdx >= 16){
             curTrack++;
             sectorIdx = 0;
             seek(curTrack, unit);
         }
+
         USLOSS_DeviceRequest req;
         req.opr = USLOSS_DISK_READ;
         req.reg1 = &sectorIdx;
 
-        
+
         req.reg2 = buffPointer;
+
+        //USLOSS_Console("Reading on track %d in sector %d\n", curTrack, sectorIdx);
+
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+        MboxRecv(diskTracks[unit], NULL, 0); 
+
         buffPointer += 512;
 
         sectorIdx++;
     }
 
     // unblock next in queue
+    args->arg1 = 0;
+    args->arg4 = 0; 
     diskQueue = diskQueue->next;
     if (diskQueue != NULL){
-        MboxSend(diskQueue[0].mboxId, NULL, NULL);
+        MboxSend(diskQueue->mboxId, NULL, NULL);
     }
     
 }
@@ -142,8 +149,8 @@ void diskWrite(void* arg) {
     void * buffer = args->arg1;
     long sectors = args->arg2;
     long track = args->arg3;
-    long first = args->arg3;
-    long unit = args->arg3;
+    long first = args->arg4;
+    long unit = args->arg5;
     USLOSS_DeviceRequest req;
 
     char partBuf[512];
@@ -180,8 +187,9 @@ void diskWrite(void* arg) {
 
         /* Then perform the write operation */
         req.opr = USLOSS_DISK_WRITE;
-        req.reg1 = i + first;
+        req.reg1 = counter;
         req.reg2 = partBuf;
+        //USLOSS_Console("Writing on track %d in sector %d this msg '%s'\n", track, counter, partBuf);
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
         MboxRecv(diskTracks[unit], NULL, 0); 
 
@@ -581,7 +589,7 @@ void appendQueue(struct diskInfo* disk) {
 void seek(int track, int unit) {
     USLOSS_DeviceRequest req;
 
-    req.opr = USLOSS_DISK_TRACKS;
+    req.opr = USLOSS_DISK_SEEK;
     req.reg1 = track;
 
     USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
