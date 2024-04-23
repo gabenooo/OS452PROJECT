@@ -179,9 +179,8 @@ void diskWrite(void* arg) {
         /* Setup the next str to write */
         memset(partBuf, '\0', 512);
         strncpy(partBuf, buffer, 512);
-        if (strlen(buffer) > 512) {
-            buffer += 512;
-        }
+        buffer += 512;
+
 
         /* Then perform the write operation */
         req.opr = USLOSS_DISK_WRITE;
