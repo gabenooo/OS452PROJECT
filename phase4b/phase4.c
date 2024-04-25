@@ -94,6 +94,13 @@ void diskRead(void* arg) {
     long first = args->arg4;
     long unit = args->arg5;
 
+    /* Error checking */
+    if (unit < 0 || unit > 1 || first > 16 || first < 0 ) {
+        //args->arg1 = -1;
+        args->arg4 = -1;
+        return; 
+    }
+    
     int mbox = MboxCreate(0,0);
 
     int diskIndex = getpid();
