@@ -211,14 +211,14 @@ void diskWrite(void* arg) {
         //USLOSS_Console("Total to write is '%s'\n", buffer);
         //USLOSS_Console("Writing on track %d in sector %d this msg '%s'\n", track, counter, partBuf);
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+        MboxRecv(diskTracks[unit], NULL, 0); 
 
         if (isDiskError == 1) {
-            args->arg1 = -1;
+            args->arg1 = USLOSS_DEV_ERROR;
+            args->arg4 = 0;
             isDiskError = 0;
             return;
         }
-
-        MboxRecv(diskTracks[unit], NULL, 0); 
 
         counter++; 
     }
@@ -472,7 +472,6 @@ void diskd(char* arg) {
         waitDevice(USLOSS_DISK_DEV, diskNum, &status);
 
         if (status == USLOSS_DEV_ERROR) {
-            USLOSS_Console("ERROR\n");
             isDiskError = 1;
         }
 
