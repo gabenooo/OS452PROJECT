@@ -135,6 +135,13 @@ void diskRead(void* arg) {
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
         MboxRecv(diskTracks[unit], NULL, 0); 
 
+        if (isDiskError == 1) {
+            args->arg1 = USLOSS_DEV_ERROR;
+            args->arg4 = 0;
+            isDiskError = 0;
+            return;
+        }
+
         buffPointer += 512;
 
         sectorIdx++;
