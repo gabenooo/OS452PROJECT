@@ -253,7 +253,13 @@ void diskWrite(void* arg) {
     /* Call the next item in the queue */
     args->arg1 = 0;
     args->arg4 = 0; 
+    struct diskInfo* cur = diskQueue;
     diskQueue = diskQueue->next;
+    cur->next = NULL;
+    MboxRelease(cur->mboxId);
+    cur->mboxId = 0;
+    cur->first = 0;
+    
     if (diskQueue != NULL) {
         MboxSend(diskQueue->mboxId, NULL, 0);
     }
@@ -633,6 +639,7 @@ void resetBuffer(int bufferToReset) {
  *  void
  */
 void appendQueue(struct diskInfo* disk) {
+
     /* If queue is empty then add disk */
     if ( diskQueue == NULL ) {
         diskQueue = disk;
@@ -646,7 +653,7 @@ void appendQueue(struct diskInfo* disk) {
     struct diskInfo* prev = cur;
     cur = cur->next;
     while (cur != NULL) {
-        if (disk->first > cur->first) {
+        if (disk->first < cur->first && disk->first > prev->first) {
             prev->next = disk;
             disk->next = cur;
             return;
@@ -657,6 +664,13 @@ void appendQueue(struct diskInfo* disk) {
 
     /* If no location found, put it at the end */
     prev->next = disk;
+
+    int counter = 0;
+    cur = diskQueue;
+    while (cur != NULL && counter < 5) {
+        cur = cur->next;
+        counter++;
+    }
 }
 
 /*
