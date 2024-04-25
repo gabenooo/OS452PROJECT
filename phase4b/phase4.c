@@ -85,7 +85,7 @@ void diskSize(void* arg) {
 }
 
 void diskRead(void* arg) {
-    USLOSS_Console("read\n");
+    //USLOSS_Console("read\n");
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     void * buffer = args->arg1;
     long sectors = args->arg2;
