@@ -67,11 +67,23 @@ struct sleepItem sleepItems[MAXPROC];
  */
 struct sleepItem* sleepQueue;
 
+/*
+ * Function:  diskSize
+ * --------------------
+ * Retrieves the size of the disk specified by the unit ID and returns it in the provided arguments.
+ * 
+ * arguments:
+ *  void* arg - pointer to a USLOSS_Sysargs structure containing arguments
+ * 
+ * returns:
+ *  void
+ */
 void diskSize(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     int response;
     long unitID = args->arg1;
 
+    /* Performs the disk size operation */
     USLOSS_DeviceRequest req;
     req.opr = USLOSS_DISK_TRACKS;
     req.reg1 = &response;
@@ -82,10 +94,19 @@ void diskSize(void* arg) {
     args->arg1 = 512;
     args->arg2 = 16;
     args->arg3 = response;
-
-    //USLOSS_Console("UnitID is %d and size is %d\n", unitID, response);
 }
 
+/*
+ * Function:  diskRead
+ * --------------------
+ * Reads data from the specified disk into the provided buffer.
+ * 
+ * arguments:
+ *  void* arg - pointer to a USLOSS_Sysargs structure containing arguments
+ * 
+ * returns:
+ *  void
+ */
 void diskRead(void* arg) {
     USLOSS_Sysargs *args = (USLOSS_Sysargs*) arg;
     void * buffer = args->arg1;
@@ -96,29 +117,31 @@ void diskRead(void* arg) {
 
     /* Error checking */
     if (unit < 0 || unit > 1 || first > 16 || first < 0 ) {
-        //args->arg1 = -1;
         args->arg4 = -1;
         return; 
     }
     
+    /* Creates the mailbox entry */
     int mbox = MboxCreate(0,0);
-
     int diskIndex = getpid();
 
     disks[diskIndex].mboxId = mbox;
     disks[diskIndex].first = track;
 
 
+    /* Adds current item to the queue */
     appendQueue(&disks[diskIndex]);
     if (diskQueue->next != NULL){
         MboxRecv(mbox, NULL, NULL);  
     } 
 
+    /* Performs the entire read operation*/
     int sectorIdx = first;
     int curTrack = track;
     char* buffPointer = buffer;
     seek(track, unit);
     for (int i = 0; i < sectors; i++){
+        /* Performs a seek if necessary */
         if (sectorIdx >= 16){
             curTrack++;
             sectorIdx = 0;
@@ -130,8 +153,7 @@ void diskRead(void* arg) {
         req.reg1 = sectorIdx;
         req.reg2 = buffPointer;
 
-        //USLOSS_Console("Reading on track %d in sector %d\n", curTrack, sectorIdx);
-
+        /* Does the read operation */
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
         MboxRecv(diskTracks[unit], NULL, 0); 
 
@@ -143,18 +165,16 @@ void diskRead(void* arg) {
         }
 
         buffPointer += 512;
-
         sectorIdx++;
     }
 
-    // unblock next in queue
+    /* Unblock the next queue item */
     args->arg1 = 0;
     args->arg4 = 0; 
     diskQueue = diskQueue->next;
     if (diskQueue != NULL){
         MboxSend(diskQueue->mboxId, NULL, NULL);
     }
-    
 }
 
 /*
