@@ -21,6 +21,8 @@ int writeCompleted[4];
 
 int diskTracks[2];
 
+int isDiskError;
+
 /*
  * termRecvMbox array for the ternimal mailbox used for recv
  */
@@ -151,6 +153,13 @@ void diskWrite(void* arg) {
     long unit = args->arg5;
     USLOSS_DeviceRequest req;
 
+    /* Error checking */
+    if (unit < 0 || unit > 1 || first > 16 || first < 0 ) {
+        //args->arg1 = -1;
+        args->arg4 = -1;
+        return; 
+    }
+
     char partBuf[512];
 
     /* Initialize the write mailbox */
@@ -195,6 +204,13 @@ void diskWrite(void* arg) {
         //USLOSS_Console("Total to write is '%s'\n", buffer);
         //USLOSS_Console("Writing on track %d in sector %d this msg '%s'\n", track, counter, partBuf);
         USLOSS_DeviceOutput(USLOSS_DISK_DEV, unit, &req);
+
+        if (isDiskError == 1) {
+            args->arg1 = -1;
+            isDiskError = 0;
+            return;
+        }
+
         MboxRecv(diskTracks[unit], NULL, 0); 
 
         counter++; 
@@ -442,15 +458,20 @@ void termd(char* arg){
 
 void diskd(char* arg) {
     int diskNum =  atoi(arg);
+
+    /* Constantly listens for disk interupts */
     while (1 == 1) {
         int status;
         waitDevice(USLOSS_DISK_DEV, diskNum, &status);
+
+        if (status == USLOSS_DEV_ERROR) {
+            USLOSS_Console("ERROR\n");
+            isDiskError = 1;
+        }
+
         MboxCondSend(diskTracks[diskNum], NULL, 0);
 
-        /* If there is an item waiting in the queue, remove it */
-        // if (diskQueue != NULL) {
-        //     MboxCondSend(diskQueue->mboxId, NULL, 0);
-        // }
+        
     }
 }
 
@@ -479,6 +500,7 @@ void phase4_init(void){
     for (int i = 0; i < 4; i++) {
         resetBuffer(i);
     }
+    isDiskError = 0;
 }
 
 /*
