@@ -171,7 +171,14 @@ void diskRead(void* arg) {
     /* Unblock the next queue item */
     args->arg1 = 0;
     args->arg4 = 0; 
+    
+    struct diskInfo* cur = diskQueue;
     diskQueue = diskQueue->next;
+    cur->next = NULL;
+    MboxRelease(cur->mboxId);
+    cur->mboxId = 0;
+    cur->first = 0;
+    
     if (diskQueue != NULL){
         MboxSend(diskQueue->mboxId, NULL, NULL);
     }
